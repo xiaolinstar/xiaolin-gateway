@@ -7,7 +7,6 @@
 - **负载均衡**：基于 Nginx 实现的软负载均衡，支持多后端服务器
 - **证书管理**：集中管理所有项目的 SSL 证书
 - **域名解析**：统一管理域名配置和路由规则
-- **可观测性**：集成 Prometheus + Grafana 可观测性系统
 - **容器化部署**：使用 Docker Compose 一键部署
 
 ## 📁 项目结构
@@ -22,9 +21,6 @@ xiaolin-gateway/
 │       └── undercover-game.conf  # undercover-game 项目配置
 ├── certs/              # SSL 证书目录
 ├── logs/               # 日志目录
-├── observability/      # 可观测性配置
-│   ├── prometheus.yml  # Prometheus 配置
-│   └── grafana/        # Grafana 配置
 ├── docker-compose.yml  # Docker Compose 配置
 ├── .gitignore          # Git 忽略文件
 └── README.md           # 项目说明
@@ -36,8 +32,6 @@ xiaolin-gateway/
 - **nginx/**：Nginx 负载均衡和代理配置
 - **certs/**：SSL 证书目录（已忽略）
 - **logs/**：日志目录（已忽略）
-- **observability/**：可观测性系统配置
-- **observability/grafana/**：Grafana 数据目录（已忽略）
 
 ## 🔧 快速开始
 
@@ -70,8 +64,6 @@ docker-compose ps
 ### 访问地址
 
 - **Nginx 网关**：http://服务器IP 或 https://域名
-- **Grafana 可观测性**：http://服务器IP:3000（默认用户名/密码：admin/admin）
-- **Prometheus**：http://服务器IP:9090
 
 ## 📍 配置说明
 
@@ -112,25 +104,11 @@ server {
 }
 ```
 
-## 📊 可观测性系统
-
-### Prometheus
-
-- 配置文件：`observability/prometheus.yml`
-- 监控目标：Nginx、Prometheus 自身、Grafana
-
-### Grafana
-
-- 默认端口：3000
-- 数据源：Prometheus
-- 可创建监控面板，监控 Nginx 性能指标
-
 ## 🔄 部署流程
 
 1. **更新配置**：修改 Nginx 配置文件，添加新的项目或更新现有配置
 2. **重新加载**：运行 `docker-compose up -d` 重新加载配置
 3. **验证**：访问域名，确保服务正常运行
-4. **可观测性**：通过 Grafana 可观测性系统监控状态
 
 ## 🛠️ 维护命令
 
