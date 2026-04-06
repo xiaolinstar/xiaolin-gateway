@@ -11,7 +11,7 @@
 
 ## 📁 项目结构
 
-```
+```text
 xiaolin-gateway/
 ├── app/                # 业务应用相关文件
 ├── nginx/              # Nginx 配置

@@ -1,0 +1,32 @@
+name: CD Pipeline, Deploy to Target Server
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["CI Pipeline, To GitHub Container Registry"]
+    types:
+      - completed
+
+env:
+  SERVER_DIR: ~/TraeProjects/undercover-game
+
+jobs:
+  deploy-to-server:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to target server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd ${{ env.SERVER_DIR }}
+            git pull
+            docker compose pull
+            docker compose down
+            docker compose up -d
+            docker image prune -f
+            echo "Deployment completed successfully!"

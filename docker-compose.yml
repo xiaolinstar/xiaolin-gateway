@@ -6,8 +6,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./certs:/etc/nginx/certs:ro
-      - ./logs:/var/log/nginx
+      # undercover 配置文件
+      - ./app/undercover/undercover.conf:/etc/nginx/conf.d/undercover.conf:ro
+      - ./app/undercover/cert:/etc/nginx/cert/undercover:ro
     restart: unless-stopped
