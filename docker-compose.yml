@@ -7,6 +7,6 @@ services:
       - "443:443"
     volumes:
       # undercover 配置文件
-      - ./app/undercover/undercover.conf:/etc/nginx/conf.d/undercover.conf:ro
+      - ./app/undercover/undercover.conf:/etc/nginx/conf.d/:ro # 覆盖 default.conf
       - ./app/undercover/cert:/etc/nginx/cert/undercover:ro
     restart: unless-stopped
