@@ -7,7 +7,7 @@ on:
       - 'main'
 
 env:
-  SERVER_DIR: ~/TraeProjects/xiaolin-gateway
+  SERVER_DIR: ~/AgentProjects/xiaolin-gateway
 
 jobs:
   deploy-to-server:
