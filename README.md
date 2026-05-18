@@ -39,13 +39,12 @@ xiaolin-gateway/
 
 - Docker & Docker Compose
 - 域名解析到服务器 IP
-- SSL 证书（可使用 Let's Encrypt 或自签名证书）
+- SSL 证书（例如腾讯云免费证书，上传到服务器并挂载到容器）
 
 ### 配置步骤
 
-1. **准备证书**：将 SSL 证书放置到 `certs/` 目录
-   - `docs.xiaolin.com.crt` 和 `docs.xiaolin.com.key`
-   - `game.xiaolin.com.crt` 和 `game.xiaolin.com.key`
+1. **准备证书**：将 SSL 证书放置到 `app/<project>/cert/` 目录（按项目隔离）
+   - 例如：`app/xiaolin-life/cert/xiaolin.fun_bundle.crt`、`app/xiaolin-life/cert/xiaolin.fun.key`
 
 2. **配置域名**：在 DNS 服务商处将域名解析到服务器 IP
    - `docs.xiaolin.com` → 服务器 IP
@@ -55,10 +54,10 @@ xiaolin-gateway/
 
 ```bash
 # 启动网关服务
-docker-compose up -d
+docker compose up -d
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 ```
 
 ### 访问地址
