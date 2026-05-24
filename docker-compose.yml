@@ -10,6 +10,7 @@ services:
       - ./app:/etc/nginx/app:ro
       - ./app/xiaolin-docs/cert:/etc/nginx/cert/xiaolin-docs:ro
       - ./app/xiaolin-life/cert:/etc/nginx/cert/xiaolin-life:ro
+      - ./app/ai-todo/cert:/etc/nginx/cert/ai-todo:ro
     networks:
       - gateway-network
     restart: always
