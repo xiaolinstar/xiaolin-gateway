@@ -23,8 +23,8 @@ xiaolin-gateway/
 │   │   ├── xiaolin-life.conf   # Nginx vhost 配置
 │   │   └── cert/               # SSL 证书（git 忽略）
 │   └── ai-todo/                # ai-todo API
-│       ├── ai-todo.conf        # wodi.games → :8082
-│       └── cert/               # wodi.games 证书（git 忽略）
+│       ├── ai-todo.conf        # xingxiaolin.cn / wodi.games → :8082
+│       └── cert/               # SSL 证书（git 忽略）
 ├── observability/              # 监控配置（下个版本启用）
 │   └── prometheus.yml
 ├── docker-compose.yml          # Docker Compose 配置
