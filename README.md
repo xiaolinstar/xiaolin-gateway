@@ -22,8 +22,11 @@ xiaolin-gateway/
 │   ├── xiaolin-life/           # xiaolin-life 项目
 │   │   ├── xiaolin-life.conf   # Nginx vhost 配置
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   └── ai-todo/                # ai-todo API
-│       ├── ai-todo.conf        # xingxiaolin.cn / wodi.games → :8082
+│   ├── ai-todo/                # ai-todo API
+│   │   ├── ai-todo.conf        # xingxiaolin.cn → :8082
+│   │   └── cert/               # SSL 证书（git 忽略）
+│   └── drink-budget/           # drink-budget API
+│       ├── drink-budget.conf   # wodi.games → :8020
 │       └── cert/               # SSL 证书（git 忽略）
 ├── observability/              # 监控配置（下个版本启用）
 │   └── prometheus.yml
