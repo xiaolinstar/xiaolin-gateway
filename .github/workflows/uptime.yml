@@ -1,0 +1,55 @@
+name: Uptime Probe
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: xiaolinstar
+            host: www.xiaolinstar.cn
+            url: https://www.xiaolinstar.cn/
+          - name: xiaolin-life
+            host: www.xiaolin.fun
+            url: https://www.xiaolin.fun/
+          - name: ai-todo
+            host: www.xingxiaolin.cn
+            url: https://www.xingxiaolin.cn/
+          - name: ai-todo-staging
+            host: www.staging.xingxiaolin.cn
+            url: https://www.staging.xingxiaolin.cn/
+          - name: drink-budget
+            host: www.wodi.games
+            url: https://www.wodi.games/
+
+    steps:
+      - name: Probe ${{ matrix.target.name }}
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            --silent \
+            --location \
+            --max-time 15 \
+            --retry 2 \
+            --retry-delay 5 \
+            --write-out "target=${{ matrix.target.name }} status=%{http_code} time=%{time_total}s\n" \
+            --output /dev/null \
+            "${{ matrix.target.url }}"
+
+      - name: Check certificate ${{ matrix.target.name }}
+        run: |
+          if ! echo | openssl s_client \
+            -servername "${{ matrix.target.host }}" \
+            -connect "${{ matrix.target.host }}:443" \
+            2>/dev/null | openssl x509 -checkend 1209600 -noout; then
+            echo "Certificate for ${{ matrix.target.host }} expires within 14 days or is invalid."
+            exit 1
+          fi

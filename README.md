@@ -28,8 +28,9 @@ xiaolin-gateway/
 │   └── drink-budget/           # drink-budget API
 │       ├── drink-budget.conf   # wodi.games → :8020
 │       └── cert/               # SSL 证书（git 忽略）
-├── observability/              # 监控配置（下个版本启用）
-│   └── prometheus.yml
+├── observability/              # 可观测配置
+│   ├── prometheus.yml
+│   └── grafana/                # Grafana 数据源与看板 provisioning
 ├── docker-compose.yml          # Docker Compose 配置
 └── .github/workflows/cd.yml    # CD 自动部署
 ```
@@ -81,6 +82,49 @@ docker compose ps
 ```
 
 生产环境通过 GitHub Actions CD 流水线自动部署，push 到 main 分支即可触发。
+
+## 📈 可观测能力
+
+阶段一已启用轻量自建监控栈：
+
+- **Prometheus**：采集时序指标，默认保留 15 天
+- **Grafana**：展示网关基础看板
+- **nginx-prometheus-exporter**：采集 Nginx `stub_status` 指标
+- **node-exporter**：采集主机 CPU、内存、磁盘等指标
+- **GitHub Actions Uptime Probe**：每 15 分钟从 GitHub Runner 探测公网域名，并检查证书是否会在 14 天内过期
+
+### 本地指标面板
+
+```bash
+docker compose up -d
+```
+
+默认访问地址：
+
+- Grafana: http://127.0.0.1:3000
+- Prometheus: http://127.0.0.1:9090
+
+默认 Grafana 账号密码为 `admin` / `admin`。生产环境建议通过环境变量覆盖：
+
+```bash
+cp .env.example .env
+vim .env
+docker compose up -d
+```
+
+真实 `.env` 放在项目根目录，与 `docker-compose.yml` 同级。该文件已被 `.gitignore` 忽略，不要提交生产密码。
+
+Prometheus 和 Grafana 默认只绑定 `127.0.0.1`，生产环境可通过 SSH 隧道访问：
+
+```bash
+ssh -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 <user>@<server>
+```
+
+### 外部探活
+
+`.github/workflows/uptime.yml` 支持手动触发，也会每 15 分钟自动执行。任一域名请求失败、HTTP 状态异常、TLS 证书无效或 14 天内过期，workflow 都会失败并触发 GitHub 通知。
+
+如需调整探测目标，修改 workflow 中的 `matrix.target` 列表即可。
 
 ## 📍 配置说明
 
