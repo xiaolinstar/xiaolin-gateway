@@ -28,6 +28,9 @@ jobs:
           - name: drink-budget
             host: www.wodi.games
             url: https://www.wodi.games/
+          - name: party-helper
+            host: api.wodi.games
+            url: https://api.wodi.games/
 
     steps:
       - name: Probe ${{ matrix.target.name }}

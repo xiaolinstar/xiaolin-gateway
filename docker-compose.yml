@@ -12,6 +12,7 @@ services:
       - ./app/xiaolin-life/cert:/etc/nginx/cert/xiaolin-life:ro
       - ./app/ai-todo/cert:/etc/nginx/cert/ai-todo:ro
       - ./app/drink-budget/cert:/etc/nginx/cert/drink-budget:ro
+      - ./app/party-helper/cert:/etc/nginx/cert/party-helper:ro
     networks:
       - gateway-network
     restart: always
