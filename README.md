@@ -163,6 +163,17 @@ chmod 600 observability/secrets/smtp_password
 - `to`：告警收件邮箱
 - `smtp_auth_password_file`：保持为 `/etc/alertmanager/secrets/smtp_password`
 
+QQ/foxmail 邮箱实测使用 STARTTLS 端口 `587` 可以正常发送：
+
+```yaml
+smtp_smarthost: smtp.qq.com:587
+smtp_require_tls: true
+```
+
+不要使用 `smtp.qq.com:465`。当前 `prom/alertmanager:v0.28.1` 不支持隐式 TLS 所需的 `smtp_force_implicit_tls` 配置，使用 `465` 会报 `does not advertise the STARTTLS extension`。
+
+邮件模板中已设置 `send_resolved: true`，告警恢复后 Alertmanager 会发送一封 resolved 邮件。恢复通知和触发通知使用同一个分组策略，通常会在 Prometheus 规则下一次评估并把恢复状态同步给 Alertmanager 后发出。
+
 最后在 `.env` 中指定本地配置：
 
 ```bash
