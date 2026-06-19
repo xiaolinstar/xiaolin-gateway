@@ -7,3 +7,6 @@ logs/
 certs/
 
 app/*/cert/
+
+observability/secrets/
+observability/alertmanager/*.local.yml

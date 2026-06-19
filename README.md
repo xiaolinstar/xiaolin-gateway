@@ -89,6 +89,7 @@ docker compose ps
 
 - **Prometheus**：采集时序指标，默认保留 15 天
 - **Grafana**：展示网关基础看板
+- **Alertmanager**：接收 Prometheus 告警并负责分组、重复提醒和邮件通知
 - **nginx-prometheus-exporter**：采集 Nginx `stub_status` 指标
 - **node-exporter**：采集主机 CPU、内存、磁盘等指标
 - **GitHub Actions Uptime Probe**：每 15 分钟从 GitHub Runner 探测公网域名，并检查证书是否会在 14 天内过期
@@ -103,6 +104,7 @@ docker compose up -d
 
 - Grafana: http://127.0.0.1:3000
 - Prometheus: http://127.0.0.1:9090
+- Alertmanager: http://127.0.0.1:9093
 
 默认 Grafana 账号密码为 `admin` / `admin`。生产环境建议通过环境变量覆盖：
 
@@ -114,10 +116,71 @@ docker compose up -d
 
 真实 `.env` 放在项目根目录，与 `docker-compose.yml` 同级。该文件已被 `.gitignore` 忽略，不要提交生产密码。
 
-Prometheus 和 Grafana 默认只绑定 `127.0.0.1`，生产环境可通过 SSH 隧道访问：
+Prometheus、Grafana 和 Alertmanager 只绑定宿主机 `127.0.0.1`，生产环境不直接暴露到公网。需要远程查看时，通过 SSH 隧道把服务端本机端口转发到本地：
 
 ```bash
-ssh -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 <user>@<server>
+ssh -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 <user>@<server>
+```
+
+如果生产环境通过 `.env` 自定义了端口，例如 `GRAFANA_PORT=9000`，隧道端口也要对应调整：
+
+```bash
+ssh -L 9000:127.0.0.1:9000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 <user>@<server>
+```
+
+隧道仅在 SSH 会话存活期间有效。需要后台运行时可加 `-N -f`：
+
+```bash
+ssh -N -f -L 9000:127.0.0.1:9000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 <user>@<server>
+```
+
+关闭后台隧道时先查找对应进程，再结束它：
+
+```bash
+ps aux | grep "ssh .* -L"
+kill <pid>
+```
+
+除非额外加上认证、HTTPS 和访问控制，否则不要把 Grafana、Prometheus 或 Alertmanager 改成 `0.0.0.0` 直接暴露公网；Prometheus 和 Alertmanager 尤其应保持本机或内网访问。
+
+### 告警配置
+
+Prometheus 会加载 `observability/alerts/*.yml` 中的告警规则，并把触发的告警发送给 Alertmanager。当前默认的 `observability/alertmanager/alertmanager.yml` 使用 `noop` 接收器，保证监控栈可以先稳定启动；启用真实邮件通知时，再使用本地配置覆盖。
+
+启用邮件告警：
+
+```bash
+cp observability/alertmanager/alertmanager.yml.example observability/alertmanager/alertmanager.local.yml
+mkdir -p observability/secrets
+printf '%s' '<smtp-password-or-app-password>' > observability/secrets/smtp_password
+chmod 600 observability/secrets/smtp_password
+```
+
+然后编辑 `observability/alertmanager/alertmanager.local.yml`：
+
+- `smtp_smarthost`：SMTP 服务器与端口，例如 `smtp.example.com:587`
+- `smtp_from` / `smtp_auth_username`：发件邮箱与认证账号
+- `to`：告警收件邮箱
+- `smtp_auth_password_file`：保持为 `/etc/alertmanager/secrets/smtp_password`
+
+最后在 `.env` 中指定本地配置：
+
+```bash
+ALERTMANAGER_CONFIG=./observability/alertmanager/alertmanager.local.yml
+ALERTMANAGER_PORT=9093
+```
+
+部署前建议先校验配置：
+
+```bash
+docker run --rm --entrypoint promtool -v "$PWD/observability:/etc/prometheus:ro" prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
+docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.28.1 check-config /etc/alertmanager/alertmanager.yml
+```
+
+如果启用了本地邮件配置，校验 Alertmanager 时改用本地文件：
+
+```bash
+docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/alertmanager:ro" prom/alertmanager:v0.28.1 check-config /etc/alertmanager/alertmanager.local.yml
 ```
 
 ### 外部探活

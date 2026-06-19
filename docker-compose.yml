@@ -55,10 +55,28 @@ services:
       - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerts:/etc/prometheus/alerts:ro
       - prometheus-data:/prometheus
     depends_on:
+      - alertmanager
       - nginx-exporter
       - node-exporter
+    networks:
+      - gateway-network
+    restart: always
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ${ALERTMANAGER_CONFIG:-./observability/alertmanager/alertmanager.yml}:/etc/alertmanager/alertmanager.yml:ro
+      - ./observability/secrets:/etc/alertmanager/secrets:ro
+      - alertmanager-data:/alertmanager
     networks:
       - gateway-network
     restart: always
@@ -92,4 +110,5 @@ networks:
 
 volumes:
   prometheus-data:
+  alertmanager-data:
   grafana-data:
