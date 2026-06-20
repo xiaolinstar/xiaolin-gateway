@@ -30,7 +30,7 @@ jobs:
             url: https://www.wodi.games/
           - name: party-helper
             host: api.wodi.games
-            url: https://api.wodi.games/
+            url: https://api.wodi.games/healthz
 
     steps:
       - name: Probe ${{ matrix.target.name }}

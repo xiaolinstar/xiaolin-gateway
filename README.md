@@ -25,9 +25,14 @@ xiaolin-gateway/
 │   ├── ai-todo/                # ai-todo API
 │   │   ├── ai-todo.conf        # xingxiaolin.cn → :8082
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   └── drink-budget/           # drink-budget API
-│       ├── drink-budget.conf   # wodi.games → :8020
+│   ├── drink-budget/           # drink-budget
+│   │   ├── drink-budget.conf   # wodi.games → :8020
+│   │   └── cert/               # SSL 证书（git 忽略）
+│   └── party-helper/           # party-helper API
+│       ├── party-helper.conf   # api.wodi.games → :8021
 │       └── cert/               # SSL 证书（git 忽略）
+├── docs/                       # 规范与说明
+│   └── healthz-probe-standard.md
 ├── observability/              # 可观测配置
 │   ├── prometheus.yml
 │   └── grafana/                # Grafana 数据源与看板 provisioning
@@ -198,7 +203,20 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 
 `.github/workflows/uptime.yml` 支持手动触发，也会每 15 分钟自动执行。任一域名请求失败、HTTP 状态异常、TLS 证书无效或 14 天内过期，workflow 都会失败并触发 GitHub 通知。
 
-如需调整探测目标，修改 workflow 中的 `matrix.target` 列表即可。
+**规范：** 所有经网关对外暴露的子系统，统一使用 `GET /healthz` 作为外部探活路径（返回 2xx）。详细约定、迁移进度与接入清单见 [docs/healthz-probe-standard.md](docs/healthz-probe-standard.md)。
+
+当前处于渐进迁移：已具备 `/healthz` 的服务在 workflow 中探测 `/healthz`；其余仍临时探测 `/`，待各后端补齐后再切换。
+
+| 子系统 | 探测 URL（当前） |
+|--------|------------------|
+| xiaolinstar | https://www.xiaolinstar.cn/ |
+| xiaolin-life | https://www.xiaolin.fun/ |
+| ai-todo | https://www.xingxiaolin.cn/ |
+| ai-todo-staging | https://www.staging.xingxiaolin.cn/ |
+| drink-budget | https://www.wodi.games/ |
+| party-helper | https://api.wodi.games/healthz |
+
+如需调整探测目标，修改 workflow 中的 `matrix.target` 列表，并同步更新规范文档中的迁移表。
 
 ## 📍 配置说明
 
@@ -208,7 +226,9 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 2. 创建 Nginx vhost 配置：`app/<project>/<project>.conf`
 3. 放置 SSL 证书到 `app/<project>/cert/`（已 git 忽略）
 4. 在 `docker-compose.yml` 中添加证书挂载
-5. 重启服务
+5. 后端实现 `GET /healthz`（见 [healthz 探活规范](docs/healthz-probe-standard.md)）
+6. 在 `.github/workflows/uptime.yml` 增加探活项（`url` 为 `https://<域名>/healthz`）
+7. 重启服务
 
 ### Nginx vhost 配置模板
 
