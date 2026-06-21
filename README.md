@@ -114,12 +114,12 @@ docker compose up -d
 默认 Grafana 账号密码为 `admin` / `admin`。生产环境建议通过环境变量覆盖：
 
 ```bash
-cp .env.example .env
-vim .env
-docker compose up -d
+cp env/production.env.example env/production.env
+vim env/production.env
+docker compose --env-file env/production.env up -d
 ```
 
-真实 `.env` 放在项目根目录，与 `docker-compose.yml` 同级。该文件已被 `.gitignore` 忽略，不要提交生产密码。
+真实运行时变量文件放在 `env/<environment>.env`，例如生产环境使用 `env/production.env`。该文件已被 `.gitignore` 忽略，不要提交生产密码。根目录 `.env` 仅作为旧部署兼容入口，新配置优先放到 `env/`。详细治理规则见 [运行时环境变量管理](docs/runtime-env-management.md)。
 
 Prometheus、Grafana 和 Alertmanager 只绑定宿主机 `127.0.0.1`，生产环境不直接暴露到公网。需要远程查看时，通过 SSH 隧道把服务端本机端口转发到本地：
 
@@ -127,7 +127,7 @@ Prometheus、Grafana 和 Alertmanager 只绑定宿主机 `127.0.0.1`，生产环
 ssh -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 <user>@<server>
 ```
 
-如果生产环境通过 `.env` 自定义了端口，例如 `GRAFANA_PORT=9000`，隧道端口也要对应调整：
+如果生产环境通过 `env/production.env` 自定义了端口，例如 `GRAFANA_PORT=9000`，隧道端口也要对应调整：
 
 ```bash
 ssh -L 9000:127.0.0.1:9000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 <user>@<server>
@@ -179,11 +179,17 @@ smtp_require_tls: true
 
 邮件模板中已设置 `send_resolved: true`，告警恢复后 Alertmanager 会发送一封 resolved 邮件。恢复通知和触发通知使用同一个分组策略，通常会在 Prometheus 规则下一次评估并把恢复状态同步给 Alertmanager 后发出。
 
-最后在 `.env` 中指定本地配置：
+最后在运行时环境文件中指定本地配置，例如 `env/production.env`：
 
 ```bash
 ALERTMANAGER_CONFIG=./observability/alertmanager/alertmanager.local.yml
 ALERTMANAGER_PORT=9093
+```
+
+然后用下面的方式启动：
+
+```bash
+docker compose --env-file env/production.env up -d
 ```
 
 部署前建议先校验配置：

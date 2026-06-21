@@ -23,8 +23,17 @@ jobs:
           script: |
             cd ${{ env.SERVER_DIR }}
             git pull
-            docker compose pull
-            docker compose down
-            docker compose up -d
+            COMPOSE_ENV_ARGS=""
+            if [ -f env/production.env ]; then
+              COMPOSE_ENV_ARGS="--env-file env/production.env"
+            elif [ -f .env ]; then
+              echo "Using legacy root .env. Prefer env/production.env for runtime config."
+            else
+              echo "No runtime env file found. Create env/production.env from env/production.env.example."
+              exit 1
+            fi
+            docker compose $COMPOSE_ENV_ARGS pull
+            docker compose $COMPOSE_ENV_ARGS down
+            docker compose $COMPOSE_ENV_ARGS up -d
             docker image prune -f
             echo "Deployment completed successfully!"

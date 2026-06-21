@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+env/*.env
+!env/*.env.example
+
 logs/
 certs/
 
