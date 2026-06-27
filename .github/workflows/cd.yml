@@ -21,7 +21,6 @@ env:
 jobs:
   deploy-to-server:
     runs-on: ubuntu-latest
-    environment: production
 
     steps:
       - name: Sync repository
