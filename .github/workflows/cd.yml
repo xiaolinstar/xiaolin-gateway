@@ -6,34 +6,107 @@ on:
     branches:
       - 'main'
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 env:
   SERVER_DIR: ~/AgentProjects/xiaolin-gateway
+  COMPOSE_ENV_FILE: env/production.env
+  LEGACY_COMPOSE_ENV_FILE: .env
 
 jobs:
   deploy-to-server:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
-      - name: Deploy to target server via SSH
+      - name: Sync repository
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
             git pull
-            COMPOSE_ENV_ARGS=""
-            if [ -f env/production.env ]; then
-              COMPOSE_ENV_ARGS="--env-file env/production.env"
-            elif [ -f .env ]; then
-              echo "Using legacy root .env. Prefer env/production.env for runtime config."
+
+      - name: Verify runtime env file
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            cd ${{ env.SERVER_DIR }}
+            test -f "${{ env.COMPOSE_ENV_FILE }}" || test -f "${{ env.LEGACY_COMPOSE_ENV_FILE }}"
+
+      - name: Validate compose model
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            cd ${{ env.SERVER_DIR }}
+            if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
+              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" config --quiet
             else
-              echo "No runtime env file found. Create env/production.env from env/production.env.example."
-              exit 1
+              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" config --quiet
             fi
-            docker compose $COMPOSE_ENV_ARGS pull
-            docker compose $COMPOSE_ENV_ARGS down
-            docker compose $COMPOSE_ENV_ARGS up -d
+
+      - name: Pull service images
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            cd ${{ env.SERVER_DIR }}
+            if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
+              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" pull
+            else
+              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" pull
+            fi
+
+      - name: Apply desired compose state
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            cd ${{ env.SERVER_DIR }}
+            if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
+              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" up -d --remove-orphans
+            else
+              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" up -d --remove-orphans
+            fi
+
+      - name: Verify gateway health
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            docker exec nginx-gateway wget -q --spider http://127.0.0.1:8080/healthz
+
+      - name: Prune unused images
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
             docker image prune -f
-            echo "Deployment completed successfully!"
