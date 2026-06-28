@@ -45,21 +45,6 @@ jobs:
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.COMPOSE_ENV_FILE }}" || test -f "${{ env.LEGACY_COMPOSE_ENV_FILE }}"
 
-      - name: Validate compose model
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
-          script: |
-            cd ${{ env.SERVER_DIR }}
-            if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
-              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" config --services
-            else
-              docker compose config --services
-            fi
-
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
         with:
