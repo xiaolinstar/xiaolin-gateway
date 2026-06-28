@@ -85,20 +85,10 @@ jobs:
           script: |
             cd ${{ env.SERVER_DIR }}
             if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
-              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" up -d --remove-orphans
+              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" up -d --remove-orphans --wait --wait-timeout 180
             else
-              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" up -d --remove-orphans
+              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" up -d --remove-orphans --wait --wait-timeout 180
             fi
-
-      - name: Verify gateway health
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
-          script: |
-            docker exec nginx-gateway wget -q --spider http://127.0.0.1:8080/healthz
 
       - name: Prune unused images
         uses: appleboy/ssh-action@v1.0.0
