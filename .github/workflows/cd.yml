@@ -15,8 +15,8 @@ permissions:
 
 env:
   SERVER_DIR: ~/AgentProjects/xiaolin-gateway
-  COMPOSE_ENV_FILE: env/production.env
-  LEGACY_COMPOSE_ENV_FILE: .env
+  BASE_ENV_FILE: .env
+  DEPLOY_ENV_FILE: .env.production
 
 jobs:
   deploy-to-server:
@@ -43,7 +43,7 @@ jobs:
           script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
-            test -f "${{ env.COMPOSE_ENV_FILE }}" || test -f "${{ env.LEGACY_COMPOSE_ENV_FILE }}"
+            test -f "${{ env.BASE_ENV_FILE }}"
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
@@ -54,11 +54,13 @@ jobs:
           script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
-            if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
-              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" pull
-            else
-              docker compose pull
+            set -a
+            . "./${{ env.BASE_ENV_FILE }}"
+            if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
+              . "./${{ env.DEPLOY_ENV_FILE }}"
             fi
+            set +a
+            docker compose pull
 
       - name: Apply desired compose state
         uses: appleboy/ssh-action@v1.0.0
@@ -69,11 +71,13 @@ jobs:
           script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
-            if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
-              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" up -d --remove-orphans --wait --wait-timeout 180
-            else
-              docker compose up -d --remove-orphans --wait --wait-timeout 180
+            set -a
+            . "./${{ env.BASE_ENV_FILE }}"
+            if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
+              . "./${{ env.DEPLOY_ENV_FILE }}"
             fi
+            set +a
+            docker compose up -d --remove-orphans
 
       - name: Prune unused images
         uses: appleboy/ssh-action@v1.0.0
