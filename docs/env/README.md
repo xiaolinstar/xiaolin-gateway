@@ -40,3 +40,7 @@ bash scripts/cd/verify-runtime-env.sh
 禁止 Agent 修改 `.env`、`.env.production` 与 `~/.config/xiaolinstar/**`；只改 `*.example` 并让人工/sync 更新 L3。
 
 注册表条目：[env-registry.yaml](https://github.com/xiaolinstar/dev-standards/blob/main/playbook/env-registry.yaml) §xiaolin-gateway。
+
+## Phase 1 迁移
+
+见 [phase1-checklist.md](phase1-checklist.md)（VPS legacy → `.env*`、集中备份、CD 验证）。
