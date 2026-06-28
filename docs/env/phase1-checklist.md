@@ -12,7 +12,7 @@
 | 本地备份 | `~/.config/xiaolinstar/xiaolin-gateway/production.env` 已填（人工） |
 | dev-standards | `sync.sh env check --project . --strict` 通过（本地有 runtime 时） |
 
-## Step 1 · VPS（124.222.98.227，部署用户）
+## Step 1 · VPS（gateway 主机 `101.34.78.2`，用户 `ubuntu`）
 
 ```bash
 cd ~/AgentProjects/xiaolin-gateway
@@ -41,11 +41,15 @@ test -d ~/AgentProjects/dev-standards || git clone git@github.com:xiaolinstar/de
 ## Step 2 · 本地集中备份（本机，人工）
 
 ```bash
+# 在本机执行
+scp ubuntu@101.34.78.2:~/AgentProjects/xiaolin-gateway/.env \
+    ~/.config/xiaolinstar/xiaolin-gateway/local.env
+scp ubuntu@101.34.78.2:~/AgentProjects/xiaolin-gateway/.env.production \
+    ~/.config/xiaolinstar/xiaolin-gateway/production.env
+chmod 600 ~/.config/xiaolinstar/xiaolin-gateway/*.env
+
 cd ~/AgentProjects/dev-standards
-./scripts/sync.sh env import-config --project xiaolin-gateway
-# 若 VPS 已就绪，也可 scp 生产文件到 ~/.config/xiaolinstar/xiaolin-gateway/production.env
-vim ~/.config/xiaolinstar/xiaolin-gateway/production.env
-./scripts/sync.sh env check --project ~/AgentProjects/xiaolin-gateway --local production --strict
+./scripts/sync.sh env check --project ~/AgentProjects/xiaolin-gateway --local --env local --strict
 ```
 
 ## Step 3 · 本地开发 runtime（可选）
