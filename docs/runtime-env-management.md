@@ -93,7 +93,17 @@ chmod 600 observability/secrets/smtp_password
    增加对应变量。
 3. 在 `docker-compose.yml` 中引用变量；能提供安全默认值时保留默认值。
 4. 在服务器真实文件中更新，例如 `.env` 和 `.env.production`。
-5. CD 会按 `.env` -> `.env.production` 的顺序加载变量并执行 `docker compose`。
+5. CD 通过 `scripts/cd/with-runtime-env.sh` 按 `.env` -> `.env.production` 加载并执行 `docker compose`。
+6. 部署前运行 `scripts/cd/verify-runtime-env.sh`（键名须与 `*.example` 一致）。
+
+## 集中配置（可选）
+
+个人备份可使用 `~/.config/xiaolinstar/xiaolin-gateway/production.env`（见 [docs/env/README.md](env/README.md)）。
+VPS 运行时仍以根目录 `.env*` 为准。
+
+## 废弃路径
+
+`env/production.env` 已废弃。请迁移到 `.env` / `.env.production`。
 
 ## 迁移到 Kubernetes 的路径
 

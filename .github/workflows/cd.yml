@@ -35,10 +35,11 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           script: |
+            set -euo pipefail
             cd ${{ env.SERVER_DIR }}
             git pull
 
-      - name: Verify runtime env file
+      - name: Verify runtime env keys
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -46,15 +47,10 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           script: |
+            set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            if [ -f env/production.env ]; then
-              echo "Using env/production.env"
-            elif [ -f "${{ env.BASE_ENV_FILE }}" ]; then
-              echo "Using legacy ${{ env.BASE_ENV_FILE }}"
-            else
-              echo "No runtime env file found."
-              exit 1
-            fi
+            test -f "${{ env.BASE_ENV_FILE }}"
+            bash scripts/cd/verify-runtime-env.sh
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
@@ -64,18 +60,9 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           script: |
+            set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            if [ -f env/production.env ]; then
-              docker compose --env-file env/production.env pull
-            else
-              set -a
-              . "./${{ env.BASE_ENV_FILE }}"
-              if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
-                . "./${{ env.DEPLOY_ENV_FILE }}"
-              fi
-              set +a
-              docker compose pull
-            fi
+            bash scripts/cd/with-runtime-env.sh pull
 
       - name: Apply desired compose state
         uses: appleboy/ssh-action@v1.0.0
@@ -85,18 +72,9 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           script: |
+            set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            if [ -f env/production.env ]; then
-              docker compose --env-file env/production.env up -d --remove-orphans
-            else
-              set -a
-              . "./${{ env.BASE_ENV_FILE }}"
-              if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
-                . "./${{ env.DEPLOY_ENV_FILE }}"
-              fi
-              set +a
-              docker compose up -d --remove-orphans
-            fi
+            bash scripts/cd/with-runtime-env.sh up -d --remove-orphans
 
       - name: Verify nginx config and reload
         uses: appleboy/ssh-action@v1.0.0

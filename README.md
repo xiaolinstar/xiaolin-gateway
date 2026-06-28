@@ -130,7 +130,7 @@ set +a
 docker compose up -d
 ```
 
-真实运行时变量文件放在项目根目录的 `.env*` 文件中。所有环境先加载 `.env`，再按场景叠加 `.env.local` 或 `.env.production`。这些真实文件已被 `.gitignore` 忽略，不要提交生产密码。详细治理规则见 [运行时环境变量管理](docs/runtime-env-management.md)。
+真实运行时变量文件放在项目根目录的 `.env*` 文件中。所有环境先加载 `.env`，再按场景叠加 `.env.local` 或 `.env.production`。这些真实文件已被 `.gitignore` 忽略，不要提交生产密码。详见 [docs/env/README.md](docs/env/README.md) 与 [运行时环境变量管理](docs/runtime-env-management.md)。
 
 Prometheus、Grafana 和 Alertmanager 只绑定宿主机 `127.0.0.1`，生产环境不直接暴露到公网。需要远程查看时，通过 SSH 隧道把服务端本机端口转发到本地：
 
