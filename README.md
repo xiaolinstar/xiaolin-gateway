@@ -32,12 +32,17 @@ xiaolin-gateway/
 │       ├── party-helper.conf   # api.wodi.games → :8021
 │       └── cert/               # SSL 证书（git 忽略）
 ├── docs/                       # 规范与说明
+│   ├── routing-registry.md     # 域名 / upstream / 负责仓库（真源）
 │   └── healthz-probe-standard.md
 ├── observability/              # 可观测配置
 │   ├── prometheus.yml
 │   └── grafana/                # Grafana 数据源与看板 provisioning
 ├── docker-compose.yml          # Docker Compose 配置
-└── .github/workflows/cd.yml    # CD 自动部署
+├── scripts/ci/                 # CI：dummy 证书 + nginx -t
+└── .github/workflows/
+    ├── ci.yml                  # gitleaks + nginx -t
+    ├── cd.yml                  # CI 通过后部署
+    └── uptime.yml              # 外部探活
 ```
 
 ## 🔧 快速开始
@@ -86,7 +91,7 @@ docker compose up -d
 docker compose ps
 ```
 
-生产环境通过 GitHub Actions CD 流水线自动部署，push 到 main 分支即可触发。
+生产环境通过 GitHub Actions 部署：**`main` 上 CI 通过后**自动 CD；也可手动 `workflow_dispatch`。配置真源见 [docs/routing-registry.md](docs/routing-registry.md)。
 
 ## 📈 可观测能力
 
@@ -225,7 +230,7 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 
 | 子系统 | 探测 URL（当前） |
 |--------|------------------|
-| xiaolinstar | https://www.xiaolinstar.cn/ |
+| xiaolinstar | https://www.xiaolinstar.cn/healthz |
 | xiaolin-life | https://www.xiaolin.fun/ |
 | ai-todo | https://www.xingxiaolin.cn/ |
 | ai-todo-staging | https://www.staging.xingxiaolin.cn/ |
@@ -238,13 +243,14 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 
 ### 添加新项目
 
-1. 在 `app/` 下创建项目目录：`app/<project>/`
-2. 创建 Nginx vhost 配置：`app/<project>/<project>.conf`
-3. 放置 SSL 证书到 `app/<project>/cert/`（已 git 忽略）
-4. 在 `docker-compose.yml` 中添加证书挂载
-5. 后端实现 `GET /healthz`（见 [healthz 探活规范](docs/healthz-probe-standard.md)）
-6. 在 `.github/workflows/uptime.yml` 增加探活项（`url` 为 `https://<域名>/healthz`）
-7. 重启服务
+1. 在 [docs/routing-registry.md](docs/routing-registry.md) 登记一行。
+2. 在 `app/` 下创建项目目录：`app/<project>/`
+3. 创建 Nginx vhost 配置：`app/<project>/<project>.conf`
+4. 放置 SSL 证书到 `app/<project>/cert/`（已 git 忽略）
+5. 在 `docker-compose.yml` 中添加证书挂载
+6. 后端实现 `GET /healthz`（见 [healthz 探活规范](docs/healthz-probe-standard.md)）
+7. 在 `.github/workflows/uptime.yml` 增加探活项（`url` 为 `https://<域名>/healthz`）
+8. 提 PR；CI 跑 gitleaks + `nginx -t` 通过后合并，CD 自动部署
 
 ### Nginx vhost 配置模板
 

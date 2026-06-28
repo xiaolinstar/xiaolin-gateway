@@ -15,7 +15,7 @@ jobs:
         target:
           - name: xiaolinstar
             host: www.xiaolinstar.cn
-            url: https://www.xiaolinstar.cn/
+            url: https://www.xiaolinstar.cn/healthz
           - name: xiaolin-life
             host: www.xiaolin.fun
             url: https://www.xiaolin.fun/

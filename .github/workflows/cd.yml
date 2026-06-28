@@ -2,9 +2,10 @@ name: CD Pipeline, Deploy to Target Server
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'main'
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
 
 concurrency:
   group: production-deploy
@@ -21,6 +22,9 @@ env:
 jobs:
   deploy-to-server:
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
 
     steps:
       - name: Sync repository
@@ -43,7 +47,14 @@ jobs:
           script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
-            test -f "${{ env.BASE_ENV_FILE }}"
+            if [ -f env/production.env ]; then
+              echo "Using env/production.env"
+            elif [ -f "${{ env.BASE_ENV_FILE }}" ]; then
+              echo "Using legacy ${{ env.BASE_ENV_FILE }}"
+            else
+              echo "No runtime env file found."
+              exit 1
+            fi
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
@@ -54,13 +65,17 @@ jobs:
           script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
-            set -a
-            . "./${{ env.BASE_ENV_FILE }}"
-            if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
-              . "./${{ env.DEPLOY_ENV_FILE }}"
+            if [ -f env/production.env ]; then
+              docker compose --env-file env/production.env pull
+            else
+              set -a
+              . "./${{ env.BASE_ENV_FILE }}"
+              if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
+                . "./${{ env.DEPLOY_ENV_FILE }}"
+              fi
+              set +a
+              docker compose pull
             fi
-            set +a
-            docker compose pull
 
       - name: Apply desired compose state
         uses: appleboy/ssh-action@v1.0.0
@@ -71,13 +86,28 @@ jobs:
           script_stop: true
           script: |
             cd ${{ env.SERVER_DIR }}
-            set -a
-            . "./${{ env.BASE_ENV_FILE }}"
-            if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
-              . "./${{ env.DEPLOY_ENV_FILE }}"
+            if [ -f env/production.env ]; then
+              docker compose --env-file env/production.env up -d --remove-orphans
+            else
+              set -a
+              . "./${{ env.BASE_ENV_FILE }}"
+              if [ -f "${{ env.DEPLOY_ENV_FILE }}" ]; then
+                . "./${{ env.DEPLOY_ENV_FILE }}"
+              fi
+              set +a
+              docker compose up -d --remove-orphans
             fi
-            set +a
-            docker compose up -d --remove-orphans
+
+      - name: Verify nginx config and reload
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            docker exec nginx-gateway nginx -t
+            docker exec nginx-gateway nginx -s reload
 
       - name: Prune unused images
         uses: appleboy/ssh-action@v1.0.0

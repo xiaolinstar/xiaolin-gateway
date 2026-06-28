@@ -46,7 +46,7 @@ https://<对外域名>/healthz
 
 | 子系统 | 对外域名 | workflow 探测路径 | 后端 /healthz | 备注 |
 |--------|----------|-------------------|---------------|------|
-| xiaolinstar | www.xiaolinstar.cn | `/`（待迁移） | 已支持（204） | |
+| xiaolinstar | www.xiaolinstar.cn | **`/healthz`** | 已支持（204） | 2026-06 已切换 |
 | xiaolin-life | www.xiaolin.fun | `/`（待迁移） | 已支持（200） | |
 | ai-todo | www.xingxiaolin.cn | `/`（待迁移） | **待实现** | |
 | ai-todo-staging | www.staging.xingxiaolin.cn | `/`（待迁移） | **待实现** | |
