@@ -37,16 +37,16 @@ Internet → nginx-gateway (80/443)
 
 ## 外部探活（uptime.yml）
 
-规范：[healthz-probe-standard.md](./healthz-probe-standard.md)
+规范：[healthz-probe-standard.md](./healthz-probe-standard.md) · workflow：`.github/workflows/uptime.yml`
 
-| ID | 当前 probe URL | 目标 URL |
-|----|----------------|----------|
-| xiaolinstar | `https://www.xiaolinstar.cn/healthz` | ✅ |
-| xiaolin-life | `https://www.xiaolin.fun/healthz` | ✅（需 life CD 拉取 nginx 配置） |
-| ai-todo | `https://www.xingxiaolin.cn/healthz` | ✅（需 API CD） |
-| ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` | ✅（需 API CD） |
-| drink-budget | `https://www.wodi.games/healthz` | ✅（需 API CD） |
-| party-helper | `https://api.wodi.games/healthz` | ✅ |
+| ID | 探活 URL |
+|----|----------|
+| xiaolinstar | `https://www.xiaolinstar.cn/healthz` |
+| xiaolin-life | `https://www.xiaolin.fun/healthz` |
+| ai-todo | `https://www.xingxiaolin.cn/healthz` |
+| ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` |
+| drink-budget | `https://www.wodi.games/healthz` |
+| party-helper | `https://api.wodi.games/healthz` |
 
 ## 新项目接入
 
@@ -55,7 +55,7 @@ Internet → nginx-gateway (80/443)
 3. `app/<project>/` 添加 vhost + `docker-compose.yml` 证书 volume。
 4. 后端实现 `GET /healthz`。
 5. `uptime.yml` 增加 matrix 项。
-6. 更新 [healthz-probe-standard.md](./healthz-probe-standard.md) 迁移表。
+6. 更新 [healthz-probe-standard.md](./healthz-probe-standard.md) 注册表。
 
 ## 维护责任
 

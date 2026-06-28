@@ -52,6 +52,17 @@ bash scripts/cd/sync-github-env.sh
 
 也可从 dev-standards 调用：`sync.sh env sync-github --project xiaolin-gateway --dry-run`
 
+## 外部探活（/healthz）
+
+本仓维护 **全站 uptime 探活** workflow（`.github/workflows/uptime.yml`），统一探测各子系统 `https://<域名>/healthz`。
+
+| 文档 | 用途 |
+|------|------|
+| [healthz-probe-standard.md](../healthz-probe-standard.md) | 端点约定与注册表（真源） |
+| [routing-registry.md](../routing-registry.md) | 域名 / upstream / 探活 URL |
+
+网关自身：`app/gateway.conf` 提供 `GET /healthz`（204）。
+
 ## Agent 禁区
 
 禁止 Agent 修改 `.env`、`.env.production` 与 `~/.config/xiaolinstar/**`；只改 `*.example` 并让人工/sync 更新 L3。

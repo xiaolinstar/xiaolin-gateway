@@ -224,11 +224,11 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 
 `.github/workflows/uptime.yml` 支持手动触发，也会每 15 分钟自动执行。任一域名请求失败、HTTP 状态异常、TLS 证书无效或 14 天内过期，workflow 都会失败并触发 GitHub 通知。
 
-**规范：** 所有经网关对外暴露的子系统，统一使用 `GET /healthz` 作为外部探活路径（返回 2xx）。详细约定、迁移进度与接入清单见 [docs/healthz-probe-standard.md](docs/healthz-probe-standard.md)。
+**规范：** 所有经网关对外暴露的子系统，统一使用 `GET /healthz` 作为外部探活路径（返回 2xx）。详细约定与注册表见 [docs/healthz-probe-standard.md](docs/healthz-probe-standard.md) · [routing-registry.md](docs/routing-registry.md)。
 
-当前 **全部** 子系统 workflow 已切换为 `/healthz`；合并后需先对各业务仓执行 CD，再观察 gateway `uptime.yml` 是否通过。
+`uptime.yml` 已全部使用 `/healthz`（2026-06）：
 
-| 子系统 | 探测 URL |
+| 子系统 | 探活 URL |
 |--------|----------|
 | xiaolinstar | https://www.xiaolinstar.cn/healthz |
 | xiaolin-life | https://www.xiaolin.fun/healthz |
