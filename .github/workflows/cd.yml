@@ -55,9 +55,9 @@ jobs:
           script: |
             cd ${{ env.SERVER_DIR }}
             if [ -f "${{ env.COMPOSE_ENV_FILE }}" ]; then
-              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" config --quiet
+              docker compose --env-file "${{ env.COMPOSE_ENV_FILE }}" config --services
             else
-              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" config --quiet
+              docker compose --env-file "${{ env.LEGACY_COMPOSE_ENV_FILE }}" config --services
             fi
 
       - name: Pull service images
