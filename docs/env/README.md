@@ -7,8 +7,10 @@
 | 层 | 路径 |
 |----|------|
 | L0 模板 | `.env.example`、`.env.production.example`、`.env.local.example` |
+| L2 CI/CD | 仓库 **Secrets** `SERVER_*`；清单见 `docs/env/github-environments.example.env` |
 | L3 运行时（VPS / 本地） | `.env` → `.env.production`（生产）或 `.env.local`（本地） |
 | L3 集中备份（可选） | `~/.config/xiaolinstar/xiaolin-gateway/production.env` |
+| L2 本地清单（可选） | `~/.config/xiaolinstar/xiaolin-gateway/github-production.env` |
 
 **不要**使用已废弃的 `env/production.env` 路径；CD 只加载根目录 `.env*`。
 
@@ -34,6 +36,21 @@ bash scripts/cd/verify-runtime-env.sh
 ~/AgentProjects/dev-standards/scripts/sync.sh env check \
   --project . --local production --strict
 ```
+
+## GitHub L2 同步（party-helper 模式）
+
+本仓 CD 使用**仓库级** Secrets（`SERVER_HOST` / `SERVER_USER` / `SERVER_PASSWORD`），不是 GitHub Environment。
+
+```bash
+mkdir -p ~/.config/xiaolinstar/xiaolin-gateway
+cp docs/env/github-production.env ~/.config/xiaolinstar/xiaolin-gateway/github-production.env
+chmod 600 ~/.config/xiaolinstar/xiaolin-gateway/github-production.env
+# 编辑真实值后：
+bash scripts/cd/sync-github-env.sh --dry-run
+bash scripts/cd/sync-github-env.sh
+```
+
+也可从 dev-standards 调用：`sync.sh env sync-github --project xiaolin-gateway --dry-run`
 
 ## Agent 禁区
 
