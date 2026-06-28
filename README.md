@@ -226,15 +226,15 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 
 **规范：** 所有经网关对外暴露的子系统，统一使用 `GET /healthz` 作为外部探活路径（返回 2xx）。详细约定、迁移进度与接入清单见 [docs/healthz-probe-standard.md](docs/healthz-probe-standard.md)。
 
-当前处于渐进迁移：已具备 `/healthz` 的服务在 workflow 中探测 `/healthz`；其余仍临时探测 `/`，待各后端补齐后再切换。
+当前 **全部** 子系统 workflow 已切换为 `/healthz`；合并后需先对各业务仓执行 CD，再观察 gateway `uptime.yml` 是否通过。
 
-| 子系统 | 探测 URL（当前） |
-|--------|------------------|
+| 子系统 | 探测 URL |
+|--------|----------|
 | xiaolinstar | https://www.xiaolinstar.cn/healthz |
-| xiaolin-life | https://www.xiaolin.fun/ |
-| ai-todo | https://www.xingxiaolin.cn/ |
-| ai-todo-staging | https://www.staging.xingxiaolin.cn/ |
-| drink-budget | https://www.wodi.games/ |
+| xiaolin-life | https://www.xiaolin.fun/healthz |
+| ai-todo | https://www.xingxiaolin.cn/healthz |
+| ai-todo-staging | https://www.staging.xingxiaolin.cn/healthz |
+| drink-budget | https://www.wodi.games/healthz |
 | party-helper | https://api.wodi.games/healthz |
 
 如需调整探测目标，修改 workflow 中的 `matrix.target` 列表，并同步更新规范文档中的迁移表。

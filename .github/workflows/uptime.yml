@@ -18,16 +18,16 @@ jobs:
             url: https://www.xiaolinstar.cn/healthz
           - name: xiaolin-life
             host: www.xiaolin.fun
-            url: https://www.xiaolin.fun/
+            url: https://www.xiaolin.fun/healthz
           - name: ai-todo
             host: www.xingxiaolin.cn
-            url: https://www.xingxiaolin.cn/
+            url: https://www.xingxiaolin.cn/healthz
           - name: ai-todo-staging
             host: www.staging.xingxiaolin.cn
-            url: https://www.staging.xingxiaolin.cn/
+            url: https://www.staging.xingxiaolin.cn/healthz
           - name: drink-budget
             host: www.wodi.games
-            url: https://www.wodi.games/
+            url: https://www.wodi.games/healthz
           - name: party-helper
             host: api.wodi.games
             url: https://api.wodi.games/healthz

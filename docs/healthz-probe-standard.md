@@ -47,10 +47,10 @@ https://<对外域名>/healthz
 | 子系统 | 对外域名 | workflow 探测路径 | 后端 /healthz | 备注 |
 |--------|----------|-------------------|---------------|------|
 | xiaolinstar | www.xiaolinstar.cn | **`/healthz`** | 已支持（204） | 2026-06 已切换 |
-| xiaolin-life | www.xiaolin.fun | `/`（待迁移） | 已支持（200） | |
-| ai-todo | www.xingxiaolin.cn | `/`（待迁移） | **待实现** | |
-| ai-todo-staging | www.staging.xingxiaolin.cn | `/`（待迁移） | **待实现** | |
-| drink-budget | www.wodi.games | `/`（待迁移） | **待实现** | |
+| xiaolin-life | www.xiaolin.fun | **`/healthz`** | 已支持（204，nginx stub） | 2026-06 已切换 |
+| ai-todo | www.xingxiaolin.cn | **`/healthz`** | 已支持（200，`ok`） | 需 API CD 后生效 |
+| ai-todo-staging | www.staging.xingxiaolin.cn | **`/healthz`** | 已支持（200，`ok`） | 需 API CD 后生效 |
+| drink-budget | www.wodi.games | **`/healthz`** | 已支持（200） | 需 API CD 后生效 |
 | party-helper | api.wodi.games | **`/healthz`** | 已支持（200） | 2026-06 已切换 |
 
 某子系统后端实现 `/healthz` 并通过自测后：

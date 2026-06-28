@@ -19,10 +19,10 @@ Internet → nginx-gateway (80/443)
 |----|-----|----------|--------------|----------|----------|----------|---------|
 | docs | ③ 内容 | `www.xiaolinstar.cn` | `app/xiaolin-docs/xiaolin-docs.conf` | `xiaolin-service` | `124.222.98.227:8080` | [xiaolin-docs](https://github.com/xiaolinstar/xiaolin-docs) | ✅ `GET /healthz` |
 | docs-com | ③ 内容 | `www.xiaolinstar.com` | 同上（301 → .cn） | — | — | xiaolin-docs | — |
-| life | ③ 内容 | `www.xiaolin.fun` | `app/xiaolin-life/xiaolin-life.conf` | `xiaolin-life` | `124.222.98.227:8081` | [xiaolin-life](https://github.com/xiaolinstar/xiaolin-life) | ⚠️ 待仓库补齐 |
-| ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `124.222.98.227:8082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ⚠️ 待 `/healthz`（现 `/v1/health`） |
-| ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ⚠️ 同上 |
-| drink | ② 应用 | `www.wodi.games` | `app/drink-budget/drink-budget.conf` | `drink-budget-api` | `124.222.98.227:8020` | [drink-budget](https://github.com/xiaolinstar/drink-budget) | ⚠️ 待实现 |
+| life | ③ 内容 | `www.xiaolin.fun` | `app/xiaolin-life/xiaolin-life.conf` | `xiaolin-life` | `124.222.98.227:8081` | [xiaolin-life](https://github.com/xiaolinstar/xiaolin-life) | ✅ `GET /healthz` |
+| ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `124.222.98.227:8082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
+| ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ✅ 同上 |
+| drink | ② 应用 | `www.wodi.games` | `app/drink-budget/drink-budget.conf` | `drink-budget-api` | `124.222.98.227:8020` | [drink-budget](https://github.com/xiaolinstar/drink-budget) | ✅ `GET /healthz` |
 | party | ② 应用 | `api.wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-api` | `124.222.98.227:8021` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz` |
 
 ### 证书目录（git 忽略，服务器手动上传）
@@ -41,11 +41,11 @@ Internet → nginx-gateway (80/443)
 
 | ID | 当前 probe URL | 目标 URL |
 |----|----------------|----------|
-| xiaolinstar | `https://www.xiaolinstar.cn/` | `https://www.xiaolinstar.cn/healthz` ✅ |
-| xiaolin-life | `https://www.xiaolin.fun/` | `/healthz`（待 life 实现） |
-| ai-todo | `https://www.xingxiaolin.cn/` | `/healthz`（待 API） |
-| ai-todo-staging | `https://www.staging.xingxiaolin.cn/` | `/healthz`（待 API） |
-| drink-budget | `https://www.wodi.games/` | `/healthz`（待 API） |
+| xiaolinstar | `https://www.xiaolinstar.cn/healthz` | ✅ |
+| xiaolin-life | `https://www.xiaolin.fun/healthz` | ✅（需 life CD 拉取 nginx 配置） |
+| ai-todo | `https://www.xingxiaolin.cn/healthz` | ✅（需 API CD） |
+| ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` | ✅（需 API CD） |
+| drink-budget | `https://www.wodi.games/healthz` | ✅（需 API CD） |
 | party-helper | `https://api.wodi.games/healthz` | ✅ |
 
 ## 新项目接入
