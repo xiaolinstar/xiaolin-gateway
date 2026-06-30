@@ -29,8 +29,8 @@ jobs:
             host: www.wodi.games
             url: https://www.wodi.games/healthz
           - name: drink-budget-admin
-            host: admin.drink-budget.com
-            url: https://admin.drink-budget.com/
+            host: admin.wodi.games
+            url: https://admin.wodi.games/
           - name: party-helper
             host: api.wodi.games
             url: https://api.wodi.games/healthz

@@ -55,7 +55,7 @@ https://<对外域名>/healthz
 | ai-todo | www.xingxiaolin.cn | `/healthz` | 200 文本 `ok` | CD 仍用 `/v1/health*` |
 | ai-todo-staging | www.staging.xingxiaolin.cn | `/healthz` | 同上 | staging VPS |
 | drink-budget | www.wodi.games | `/healthz` | 200 JSON | `/health` 保留兼容 |
-| drink-budget-admin | admin.drink-budget.com | `/` | 待实现 | |
+| drink-budget-admin | admin.wodi.games | `/` | 待实现 | |
 | party-helper | api.wodi.games | `/healthz` | 200 JSON | |
 
 合并代码后需对应用/内容仓执行 **CD**，公网 `/healthz` 才会生效；gateway `uptime.yml` 已统一探测 `/healthz`。

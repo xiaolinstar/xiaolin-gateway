@@ -235,7 +235,7 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 | ai-todo | https://www.xingxiaolin.cn/healthz |
 | ai-todo-staging | https://www.staging.xingxiaolin.cn/healthz |
 | drink-budget | https://www.wodi.games/healthz |
-| drink-budget-admin | https://admin.drink-budget.com/ |
+| drink-budget-admin | https://admin.wodi.games/ |
 | party-helper | https://api.wodi.games/healthz |
 
 如需调整探测目标，修改 workflow 中的 `matrix.target` 列表，并同步更新规范文档中的迁移表。
