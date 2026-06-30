@@ -27,6 +27,8 @@ gen app/ai-todo/cert www.xingxiaolin.cn.key www.xingxiaolin.cn.pem
 gen app/ai-todo/cert www.staging.xingxiaolin.cn.key www.staging.xingxiaolin.cn.pem
 
 gen app/drink-budget/cert wodi.games.key wodi.games_bundle.crt
+gen app/drink-budget/cert admin.wodi.games.key admin.wodi.games_bundle.crt
+gen app/drink-budget/cert admin.drink-budget.com.key admin.drink-budget.com_bundle.crt
 
 gen app/party-helper/cert api.wodi.games.key api.wodi.games_bundle.crt
 
