@@ -1,0 +1,39 @@
+# Local-only ai-todo vhost. Mounted as ai-todo.conf in docker-compose.local.yml,
+# which fully replaces the production file inside the container (file bind mount
+# wins over the ./app directory mount for that path).
+#
+# Default backend: K8s LoadBalancer service/api on host :8082
+
+upstream ai-todo-local {
+    server host.docker.internal:8082;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name ai-todo-api.localhost;
+
+    ssl_certificate /etc/nginx/cert/ai-todo/www.xingxiaolin.cn.pem;
+    ssl_certificate_key /etc/nginx/cert/ai-todo/www.xingxiaolin.cn.key;
+    ssl_session_timeout 5m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
+    ssl_prefer_server_ciphers on;
+
+    access_log  /var/log/nginx/ai-todo-api.localhost.access.log  main;
+
+    location / {
+        proxy_pass http://ai-todo-local;
+        proxy_set_header Host ai-todo-api.localhost;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

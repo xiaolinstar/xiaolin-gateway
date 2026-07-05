@@ -1,0 +1,9 @@
+# Local overlay: merged when COMPOSE_FILE includes this file (see .env.local.example).
+# ai-todo.local.overlay bind-mounts over ai-todo.conf (replaces prod file in container).
+services:
+  nginx-gateway:
+    container_name: nginx-gateway-local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./app/ai-todo/ai-todo.local.overlay:/etc/nginx/app/ai-todo/ai-todo.conf:ro

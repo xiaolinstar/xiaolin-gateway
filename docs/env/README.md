@@ -21,7 +21,7 @@
 .env  →  .env.local       # 本地开发
 ```
 
-Compose 入口：`scripts/cd/with-runtime-env.sh`（先 source 再 `docker compose`）。
+Compose 入口：直接使用 `docker compose --env-file .env --env-file .env.production` (或 `.env.local`)。
 
 ## 键名校验
 
@@ -30,7 +30,7 @@ Compose 入口：`scripts/cd/with-runtime-env.sh`（先 source 再 `docker compo
 ~/AgentProjects/dev-standards/scripts/sync.sh env check --project .
 
 # VPS 部署前（CD 已集成）：缺键则 fail
-bash scripts/cd/verify-runtime-env.sh
+bash ~/AgentProjects/dev-standards/scripts/env/check-env-keys.sh --project . --strict --runtime .env --runtime .env.production --warn-extra
 
 # 对比 ~/.config/xiaolinstar
 ~/AgentProjects/dev-standards/scripts/sync.sh env check \
@@ -46,8 +46,8 @@ mkdir -p ~/.config/xiaolinstar/xiaolin-gateway
 cp docs/env/github-production.env ~/.config/xiaolinstar/xiaolin-gateway/github-production.env
 chmod 600 ~/.config/xiaolinstar/xiaolin-gateway/github-production.env
 # 编辑真实值后：
-bash scripts/cd/sync-github-env.sh --dry-run
-bash scripts/cd/sync-github-env.sh
+node ~/AgentProjects/dev-standards/scripts/env/sync-github-env.mjs --project xiaolin-gateway --dry-run
+node ~/AgentProjects/dev-standards/scripts/env/sync-github-env.mjs --project xiaolin-gateway
 ```
 
 也可从 dev-standards 调用：`sync.sh env sync-github --project xiaolin-gateway --dry-run`

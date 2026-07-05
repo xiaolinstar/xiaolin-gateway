@@ -37,8 +37,10 @@ xiaolin-gateway/
 ├── observability/              # 可观测配置
 │   ├── prometheus.yml
 │   └── grafana/                # Grafana 数据源与看板 provisioning
-├── docker-compose.yml          # Docker Compose 配置
-├── scripts/ci/                 # CI：dummy 证书 + nginx -t
+├── docker-compose.yml          # 网关核心（nginx-gateway）
+├── docker-compose.local.yml    # 本地 overlay（ai-todo vhost 等）
+├── observability-compose.yml   # 可选：Prometheus / Grafana / exporters
+├── scripts/                    # 证书生成等辅助脚本
 └── .github/workflows/
     ├── ci.yml                  # gitleaks + nginx -t
     ├── cd.yml                  # CI 通过后部署
@@ -56,36 +58,61 @@ xiaolin-gateway/
 ### 本地开发环境
 
 ```bash
-# 1. 生成自签名证书（文件名与生产一致）
-openssl req -x509 -newkey rsa:2048 \
-  -keyout app/xiaolin-docs/cert/xiaolinstar.cn.key \
-  -out app/xiaolin-docs/cert/xiaolinstar.cn_bundle.crt \
-  -days 365 -nodes -subj "/CN=localhost"
+# 1. 准备运行时配置
+cp .env.example .env
+cp .env.local.example .env.local
 
-openssl req -x509 -newkey rsa:2048 \
-  -keyout app/xiaolin-life/cert/xiaolin.fun.key \
-  -out app/xiaolin-life/cert/xiaolin.fun_bundle.crt \
-  -days 365 -nodes -subj "/CN=localhost"
+# 2. 准备自签名证书
+bash scripts/prepare-certs.sh
 
-# 2. 启动（默认使用 80/443 端口）
-docker compose up -d
+# 3. 启动本地网关（通过指定环境变量文件，自动合并 docker-compose.local.yml）
+docker compose --env-file .env --env-file .env.local up -d nginx-gateway
 
-# 如果本地端口被占用，使用环境变量覆盖
-HTTP_PORT=8081 HTTPS_PORT=8444 docker compose up -d
-
-# 3. 查看日志
-docker logs nginx-gateway -f
+# 4. 查看日志
+docker logs nginx-gateway-local -f
 ```
 
-**端口冲突处理**：通过环境变量 `HTTP_PORT` 和 `HTTPS_PORT` 覆盖默认端口，无需修改配置文件。
+本地默认端口为 `8880`（HTTP）/ `8443`（HTTPS），可在 `.env.local` 中通过 `HTTP_PORT` / `HTTPS_PORT` 覆盖。
+
+**ai-todo 联调**：在 ai-todo 项目侧先暴露 API，例如：
+
+```bash
+kubectl port-forward --address 0.0.0.0 service/api 8082:3100
+```
+
+然后通过本地网关验证（`.localhost` 一般会自动解析到 `127.0.0.1`，通常**无需**改 `/etc/hosts`）：
+
+```bash
+curl -k -i https://ai-todo-api.localhost:8443/v1/health
+```
+
+若本机解析异常，可用 `--resolve` 兜底：
+
+```bash
+curl -k -i --resolve ai-todo-api.localhost:8443:127.0.0.1 https://ai-todo-api.localhost:8443/v1/health
+```
+
+**停止**：`docker compose --env-file .env --env-file .env.local down`
+
+**可选：本地监控栈**（Prometheus / Grafana 等）：
+
+```bash
+# 原生命令启动本地监控栈：
+docker compose --env-file .env --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml -f observability-compose.yml up -d
+# 或者在 .env.local 中设置 COMPOSE_FILE 环境变量，然后直接执行：
+# docker compose --env-file .env --env-file .env.local up -d
+```
 
 ### 生产环境
 
 ```bash
 # 1. 将正式 SSL 证书上传到 app/<project>/cert/ 目录
 
-# 2. 启动
-docker compose up -d
+# 2. 启动（.env 默认含 observability-compose.yml）
+docker compose --env-file .env --env-file .env.production up -d
+
+# 仅网关、不要监控栈时，在 .env.production 覆盖：
+# COMPOSE_FILE=docker-compose.yml
 
 # 3. 验证
 docker compose ps
@@ -106,11 +133,7 @@ docker compose ps
 
 ### 本地指标面板
 
-```bash
-docker compose up -d
-```
-
-默认访问地址：
+需先加载 `observability-compose.yml`（见上方「可选：本地监控栈」），然后访问：
 
 - Grafana: http://127.0.0.1:3000
 - Prometheus: http://127.0.0.1:9090

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Generate self-signed certs so nginx -t can load all vhost SSL directives in CI.
+# Generate self-signed certs so nginx -t can load all vhost SSL directives in CI and local development.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 gen() {

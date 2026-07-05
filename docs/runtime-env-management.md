@@ -32,12 +32,19 @@ cp .env.example .env
 cp .env.local.example .env.local
 vim .env
 vim .env.local
-set -a
-. ./.env
-. ./.env.local
-set +a
-docker compose up -d
+docker compose --env-file .env --env-file .env.local up -d nginx-gateway
 ```
+
+`.env.local` 中的 `COMPOSE_FILE=docker-compose.yml:docker-compose.local.yml` 会合并 local overlay，**默认不加载** `observability-compose.yml`。`ai-todo.local.overlay` 以 bind mount 挂载为容器内 `ai-todo.conf`，**完全替换**生产配置（仅含本地 `ai-todo-local` upstream 与 `ai-todo-api.localhost` vhost）。`docker compose --env-file .env --env-file .env.local up -d nginx-gateway` 只启动 `nginx-gateway`。
+
+按需启用监控栈：
+
+```bash
+docker compose --env-file .env --env-file .env.local -f docker-compose.yml -f docker-compose.local.yml -f observability-compose.yml up -d
+# 或在 .env.local 追加 observability-compose.yml 到 COMPOSE_FILE
+```
+
+生产环境默认在 `.env` / `.env.production` 中设置 `COMPOSE_FILE=docker-compose.yml:observability-compose.yml`。仅部署网关时可覆盖为 `COMPOSE_FILE=docker-compose.yml`。
 
 ## Alertmanager 多环境配置
 
@@ -91,10 +98,10 @@ chmod 600 observability/secrets/smtp_password
 1. 在 `.env.example` 增加默认值。
 2. 如果某个环境需要覆盖，在 `.env.local.example` 或 `.env.production.example`
    增加对应变量。
-3. 在 `docker-compose.yml` 中引用变量；能提供安全默认值时保留默认值。
+3. 在 `docker-compose.yml` 或 `observability-compose.yml` 中引用变量；能提供安全默认值时保留默认值。
 4. 在服务器真实文件中更新，例如 `.env` 和 `.env.production`。
-5. CD 通过 `scripts/cd/with-runtime-env.sh` 按 `.env` -> `.env.production` 加载并执行 `docker compose`。
-6. 部署前运行 `scripts/cd/verify-runtime-env.sh`（键名须与 `*.example` 一致）。
+5. CD 通过 `docker compose --env-file .env --env-file .env.production` 加载并执行。
+6. 部署前运行 `dev-standards` 校验（键名须与 `*.example` 一致）。
 
 ## 集中配置（可选）
 

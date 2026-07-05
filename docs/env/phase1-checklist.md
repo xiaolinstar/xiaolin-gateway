@@ -8,7 +8,7 @@
 | 检查项 | 完成标准 |
 |--------|----------|
 | VPS 运行时 | 存在 `.env` + `.env.production`，无 `env/production.env` |
-| CD | `verify-runtime-env.sh` 通过；`with-runtime-env.sh` 可 `docker compose` |
+| CD | `check-env-keys.sh` 通过；使用 `docker compose --env-file` 部署 |
 | 本地备份 | `~/.config/xiaolinstar/xiaolin-gateway/production.env` 已填（人工） |
 | dev-standards | `sync.sh env check --project . --strict` 通过（本地有 runtime 时） |
 
@@ -18,18 +18,14 @@
 cd ~/AgentProjects/xiaolin-gateway
 git pull
 
-# 若仍有 legacy 单文件
-bash scripts/cd/migrate-legacy-env.sh --dry-run
-bash scripts/cd/migrate-legacy-env.sh
-
-# 若从未有过 legacy，直接从模板创建并编辑
+# 直接从模板创建并编辑
 cp .env.example .env
 cp .env.production.example .env.production
 chmod 600 .env .env.production
 vim .env .env.production   # 保留现有 Grafana 密码等真实值
 
-bash scripts/cd/verify-runtime-env.sh
-bash scripts/cd/with-runtime-env.sh config   # 可选：确认 compose 解析
+bash ~/AgentProjects/dev-standards/scripts/env/check-env-keys.sh --project . --strict --runtime .env --runtime .env.production --warn-extra
+docker compose --env-file .env --env-file .env.production config   # 可选：确认 compose 解析
 ```
 
 确认 `~/AgentProjects/dev-standards` 存在（CD verify 依赖）：
@@ -68,8 +64,8 @@ chmod 600 .env .env.local
 推送 `main` 或手动在 VPS：
 
 ```bash
-bash scripts/cd/with-runtime-env.sh pull
-bash scripts/cd/with-runtime-env.sh up -d --remove-orphans
+docker compose --env-file .env --env-file .env.production pull
+docker compose --env-file .env --env-file .env.production up -d --remove-orphans
 ```
 
 ## Step 5 · 更新进度

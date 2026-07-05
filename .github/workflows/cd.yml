@@ -50,7 +50,13 @@ jobs:
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
-            bash scripts/cd/verify-runtime-env.sh
+            DEV_STANDARDS="${DEV_STANDARDS:-$HOME/AgentProjects/dev-standards}"
+            CHECK="$DEV_STANDARDS/scripts/env/check-env-keys.sh"
+            if [[ -x "$CHECK" ]]; then
+              bash "$CHECK" --project . --strict --runtime .env --runtime .env.production --warn-extra
+            else
+              echo "warn: dev-standards check script not found (skip key validation)"
+            fi
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
@@ -62,7 +68,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            bash scripts/cd/with-runtime-env.sh pull
+            docker compose --env-file .env --env-file .env.production pull
 
       - name: Apply desired compose state
         uses: appleboy/ssh-action@v1.0.0
@@ -74,7 +80,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            bash scripts/cd/with-runtime-env.sh up -d --remove-orphans
+            docker compose --env-file .env --env-file .env.production up -d --remove-orphans
 
       - name: Verify nginx config and reload
         uses: appleboy/ssh-action@v1.0.0

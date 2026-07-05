@@ -28,8 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: nginx -t (all vhosts)
-        run: bash scripts/ci/nginx-config-test.sh
+      - name: Prepare environment and certificates
+        run: |
+          cp .env.example .env
+          bash scripts/prepare-certs.sh
+      - name: Test production config
+        run: docker compose run --rm nginx-gateway nginx -t
+      - name: Test local config overlay
+        run: |
+          cp .env.local.example .env.local
+          docker compose --env-file .env --env-file .env.local run --rm nginx-gateway nginx -t
 
   env-templates:
     name: Env template key check
