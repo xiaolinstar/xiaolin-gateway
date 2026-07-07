@@ -23,7 +23,7 @@ xiaolin-gateway/
 │   │   ├── xiaolin-life.conf   # Nginx vhost 配置
 │   │   └── cert/               # SSL 证书（git 忽略）
 │   ├── ai-todo/                # ai-todo API
-│   │   ├── ai-todo.conf        # xingxiaolin.cn → :8082
+│   │   ├── ai-todo.conf        # xingxiaolin.cn → 111:30082 (K8s)
 │   │   └── cert/               # SSL 证书（git 忽略）
 │   ├── drink-budget/           # drink-budget
 │   │   ├── drink-budget.conf   # wodi.games → :8020

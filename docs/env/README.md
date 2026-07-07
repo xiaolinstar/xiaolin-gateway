@@ -67,7 +67,8 @@ node ~/AgentProjects/dev-standards/scripts/env/sync-github-env.mjs --project xia
 
 禁止 Agent 修改 `.env`、`.env.production` 与 `~/.config/xiaolinstar/**`；只改 `*.example` 并让人工/sync 更新 L3。
 
-注册表条目：[env-registry.yaml](https://github.com/xiaolinstar/dev-standards/blob/main/playbook/env-registry.yaml) §xiaolin-gateway。
+注册表条目：[env-registry.yaml](https://github.com/xiaolinstar/dev-standards/blob/main/playbook/env-registry.yaml) §xiaolin-gateway。  
+L2 标准：[ADR-0009](https://github.com/xiaolinstar/dev-standards/blob/main/playbook/adr/0009-l2-github-env-by-category.md)（category: **platform**）。
 
 ## Phase 1 迁移
 
