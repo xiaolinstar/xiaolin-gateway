@@ -20,7 +20,7 @@ Internet → nginx-gateway (80/443)
 | docs | ③ 内容 | `www.xiaolinstar.cn` | `app/xiaolin-docs/xiaolin-docs.conf` | `xiaolin-service` | `124.222.98.227:8080` | [xiaolin-docs](https://github.com/xiaolinstar/xiaolin-docs) | ✅ `GET /healthz` |
 | docs-com | ③ 内容 | `www.xiaolinstar.com` | 同上（301 → .cn） | — | — | xiaolin-docs | — |
 | life | ③ 内容 | `www.xiaolin.fun` | `app/xiaolin-life/xiaolin-life.conf` | `xiaolin-life` | `124.222.98.227:8081` | [xiaolin-life](https://github.com/xiaolinstar/xiaolin-life) | ✅ `GET /healthz` |
-| ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `124.222.98.227:8082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
+| ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `111.229.38.208:30082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
 | ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ✅ 同上 |
 | drink | ② 应用 | `www.wodi.games` | `app/drink-budget/drink-budget.conf` | `drink-budget-api` | `124.222.98.227:8020` | [drink-budget](https://github.com/xiaolinstar/drink-budget) | ✅ `GET /healthz` |
 | party | ② 应用 | `api.wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-api` | `124.222.98.227:8021` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz` |
