@@ -29,7 +29,7 @@ xiaolin-gateway/
 │   │   ├── drink-budget.conf   # wodi.games → :8020
 │   │   └── cert/               # SSL 证书（git 忽略）
 │   └── party-helper/           # party-helper API
-│       ├── party-helper.conf   # api.wodi.games → :8021
+│       ├── party-helper.conf   # api.wodi.games → 111:30021
 │       └── cert/               # SSL 证书（git 忽略）
 ├── docs/                       # 规范与说明
 │   ├── routing-registry.md     # 域名 / upstream / 负责仓库（真源）

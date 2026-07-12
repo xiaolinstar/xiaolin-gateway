@@ -18,6 +18,7 @@ env:
   SERVER_DIR: ~/AgentProjects/xiaolin-gateway
   BASE_ENV_FILE: .env
   DEPLOY_ENV_FILE: .env.production
+  PRODUCTION_COMPOSE_FILE: docker-compose.yml:observability-compose.yml
 
 jobs:
   deploy-to-server:
@@ -50,6 +51,21 @@ jobs:
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
+            touch "${{ env.DEPLOY_ENV_FILE }}"
+
+            ensure_env_key() {
+              local file="$1"
+              local key="$2"
+              local value="$3"
+
+              if ! grep -qE "^${key}=" "$file"; then
+                printf '\n%s=%s\n' "$key" "$value" >> "$file"
+              fi
+            }
+
+            ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "${{ env.PRODUCTION_COMPOSE_FILE }}"
+            ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "${{ env.PRODUCTION_COMPOSE_FILE }}"
+
             DEV_STANDARDS="${DEV_STANDARDS:-$HOME/AgentProjects/dev-standards}"
             CHECK="$DEV_STANDARDS/scripts/env/check-env-keys.sh"
             if [[ -x "$CHECK" ]]; then
@@ -68,6 +84,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
+            export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE }}}"
             docker compose --env-file .env --env-file .env.production pull
 
       - name: Apply desired compose state
@@ -80,6 +97,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
+            export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE }}}"
             docker compose --env-file .env --env-file .env.production up -d --remove-orphans
 
       - name: Verify nginx config and reload
