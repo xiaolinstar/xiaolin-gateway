@@ -39,7 +39,7 @@ Internet → nginx-gateway (80/443)
 | 业务 API | `drinkzen-api` | NodePort `31011` | 固定生产契约 |
 | 管理后台 | `drinkzen-admin` | NodePort `31012` | 固定生产契约 |
 
-Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://drinkzen-web`，API 域名和管理后台无需改动。`www.drinkzen.cn` 待单域名证书签发后单独配置 301 跳转。
+Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://drinkzen-web`，API 域名和管理后台无需改动。当前 `drinkzen.cn` 证书的 SAN 已覆盖 `www.drinkzen.cn`；待 `www` DNS 启用后，在 Nginx 中增加到根域名的 301 跳转即可。
 
 ### 证书目录（git 忽略，服务器手动上传）
 
@@ -64,8 +64,11 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` |
 | drink-budget | `https://www.wodi.games/healthz` |
 | party-helper | `https://api.wodi.games/healthz` |
+| drinkzen | `https://drinkzen.cn/healthz` |
+| drinkzen-api | `https://api.drinkzen.cn/healthz` |
+| drinkzen-admin | `https://admin.drinkzen.cn/healthz` |
 
-drinkzen 的三个公网探测将在 DNS 切换并完成预检后加入 workflow。
+drinkzen 的三个公网入口已完成 DNS、TLS 和 `/healthz` 预检，并纳入 workflow。
 
 ## 新项目接入
 

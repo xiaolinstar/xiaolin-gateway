@@ -34,6 +34,15 @@ jobs:
           - name: party-helper
             host: api.wodi.games
             url: https://api.wodi.games/healthz
+          - name: drinkzen
+            host: drinkzen.cn
+            url: https://drinkzen.cn/healthz
+          - name: drinkzen-api
+            host: api.drinkzen.cn
+            url: https://api.drinkzen.cn/healthz
+          - name: drinkzen-admin
+            host: admin.drinkzen.cn
+            url: https://admin.drinkzen.cn/healthz
 
     steps:
       - name: Probe ${{ matrix.target.name }}
