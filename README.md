@@ -265,6 +265,7 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 | drink-budget-admin | https://admin.wodi.games/ |
 | party-helper | https://api.wodi.games/healthz |
 | drinkzen | https://drinkzen.cn/healthz |
+| drinkzen-www | https://www.drinkzen.cn/healthz（301 到根域名） |
 | drinkzen-api | https://api.drinkzen.cn/healthz |
 | drinkzen-admin | https://admin.drinkzen.cn/healthz |
 

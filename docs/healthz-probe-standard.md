@@ -58,6 +58,7 @@ https://<对外域名>/healthz
 | drink-budget-admin | admin.wodi.games | `/` | 待实现 | |
 | party-helper | api.wodi.games | `/healthz` | 200 JSON | |
 | drinkzen | drinkzen.cn | `/healthz` | 200 JSON | 当前与 API 共用服务 |
+| drinkzen-www | www.drinkzen.cn | `/healthz` | 301 到根域名 | Uptime 跟随跳转 |
 | drinkzen-api | api.drinkzen.cn | `/healthz` | 200 JSON | NodePort `31011` |
 | drinkzen-admin | admin.drinkzen.cn | `/healthz` | 200 | NodePort `31012` |
 
