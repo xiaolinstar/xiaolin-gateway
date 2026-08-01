@@ -25,14 +25,18 @@ xiaolin-gateway/
 │   ├── ai-todo/                # ai-todo API
 │   │   ├── ai-todo.conf        # xingxiaolin.cn → 111:30082 (K8s)
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   ├── drink-budget/           # drink-budget
+│   ├── drink-budget/           # 旧 drink-budget（迁移期间保留）
 │   │   ├── drink-budget.conf   # wodi.games → :8020
+│   │   └── cert/               # SSL 证书（git 忽略）
+│   ├── drinkzen/               # drinkzen（奶茶仙人）
+│   │   ├── drinkzen.conf       # drinkzen.cn/API → 111:31011 / admin → 111:31012
 │   │   └── cert/               # SSL 证书（git 忽略）
 │   └── party-helper/           # party-helper API
 │       ├── party-helper.conf   # api.wodi.games → 111:30021
 │       └── cert/               # SSL 证书（git 忽略）
 ├── docs/                       # 规范与说明
 │   ├── routing-registry.md     # 域名 / upstream / 负责仓库（真源）
+│   ├── backend-exposure-standard.md # 后端暴露端点与端口分配规范
 │   └── healthz-probe-standard.md
 ├── observability/              # 可观测配置
 │   ├── prometheus.yml
