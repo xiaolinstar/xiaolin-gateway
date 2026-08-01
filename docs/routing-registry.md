@@ -2,6 +2,7 @@
 
 > 公网入口与 upstream 的**唯一真相来源**。各业务仓库 README 只链本文，不重复维护 Nginx 细节。
 > 变更 vhost 时：**先改本文 → 改 `app/<project>/` conf → 改 `uptime.yml`（若域名/探活变）→ CI `nginx -t` → CD**。
+> 后端端口的归属和分配规则见 [backend-exposure-standard.md](./backend-exposure-standard.md)。
 
 ## 拓扑
 
@@ -23,7 +24,22 @@ Internet → nginx-gateway (80/443)
 | ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `111.229.38.208:30082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
 | ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ✅ 同上 |
 | drink | ② 应用 | `www.wodi.games` | `app/drink-budget/drink-budget.conf` | `drink-budget-api` | `111.229.38.208:8020` | [drink-budget](https://github.com/xiaolinstar/drink-budget) | ✅ `GET /healthz` |
+| drinkzen | ② 应用 | `drinkzen.cn` | `app/drinkzen/drinkzen.conf` | `drinkzen-api`（过渡） | `111.229.38.208:31011` | [drinkzen](https://github.com/xiaolinstar/drinkzen) | ✅ `GET /healthz` |
+| drinkzen-api | ② 应用 | `api.drinkzen.cn` | 同上 | `drinkzen-api` | `111.229.38.208:31011` | drinkzen | ✅ `GET /healthz` |
+| drinkzen-admin | ② 应用 | `admin.drinkzen.cn` | 同上 | `drinkzen-admin` | `111.229.38.208:31012` | drinkzen | ✅ `GET /healthz` |
 | party | ② 应用 | `api.wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-api` | `111.229.38.208:30021` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz` |
+
+### drinkzen Web 拆分计划
+
+最终状态中，`drinkzen.cn` 与 `api.drinkzen.cn` 暂时共用 `drinkzen-api:31011`。独立 Web Service 部署后再拆分用户入口：
+
+| 服务角色 | Upstream | 暴露端点 | 切换条件 |
+|----------|----------|----------|----------|
+| 用户端 Web | `drinkzen-web` | 目标 NodePort `31010` | Service 部署且 `GET /healthz` 可用 |
+| 业务 API | `drinkzen-api` | NodePort `31011` | 固定生产契约 |
+| 管理后台 | `drinkzen-admin` | NodePort `31012` | 固定生产契约 |
+
+Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://drinkzen-web`，API 域名和管理后台无需改动。`www.drinkzen.cn` 待单域名证书签发后单独配置 301 跳转。
 
 ### 证书目录（git 忽略，服务器手动上传）
 
@@ -33,6 +49,7 @@ Internet → nginx-gateway (80/443)
 | xiaolin-life | `app/xiaolin-life/cert/` | `xiaolin.fun_*` |
 | ai-todo | `app/ai-todo/cert/` | `www.xingxiaolin.cn.pem`、`www.staging.xingxiaolin.cn.pem` |
 | drink-budget | `app/drink-budget/cert/` | `wodi.games_*` |
+| drinkzen | `app/drinkzen/cert/` | `drinkzen.cn_*`、`api.drinkzen.cn_*`、`admin.drinkzen.cn_*` |
 | party-helper | `app/party-helper/cert/` | `api.wodi.games_*` |
 
 ## 外部探活（uptime.yml）
@@ -47,6 +64,8 @@ Internet → nginx-gateway (80/443)
 | ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` |
 | drink-budget | `https://www.wodi.games/healthz` |
 | party-helper | `https://api.wodi.games/healthz` |
+
+drinkzen 的三个公网探测将在 DNS 切换并完成预检后加入 workflow。
 
 ## 新项目接入
 
