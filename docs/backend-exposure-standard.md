@@ -14,15 +14,15 @@
 
 每个接入网关的服务必须声明：
 
-| 字段 | 要求 |
-|------|------|
-| 项目与环境 | 项目名、production/staging |
-| 服务角色 | `web`、`api`、`admin` 等 |
-| 暴露端点 | 网关可访问的固定 `IP:port` |
-| 暴露实现 | 111 k3s 生产固定为专用 NodePort |
-| 健康检查 | 无鉴权的 `GET /healthz`，返回 2xx |
-| 网络边界 | 安全组/防火墙仅允许网关来源访问 |
-| 负责仓库 | Service 清单和发布流程的真源 |
+| 字段       | 要求                              |
+| ---------- | --------------------------------- |
+| 项目与环境 | 项目名、production/staging        |
+| 服务角色   | `web`、`api`、`admin` 等          |
+| 暴露端点   | 网关可访问的固定 `IP:port`        |
+| 暴露实现   | 111 k3s 生产固定为专用 NodePort   |
+| 健康检查   | 无鉴权的 `GET /healthz`，返回 2xx |
+| 网络边界   | 安全组/防火墙仅允许网关来源访问   |
+| 负责仓库   | Service 清单和发布流程的真源      |
 
 网关不得根据容器端口、Service `port` 或端口命名习惯猜测暴露端点。变更前必须同时检查业务仓渲染后的生产清单，并从网关网络方向执行 HTTP 探测。
 
@@ -30,26 +30,26 @@
 
 生产使用 `31000-31999`，staging 使用 `32000-32767`。每个项目保留连续 10 个端口，角色偏移固定为：Web `+0`、API `+1`、Admin `+2`。
 
-| 项目 | 生产端口块 | Web | API | Admin |
-|------|------------|-----|-----|-------|
-| drinkzen | `31010-31019` | `31010` | `31011` | `31012` |
+| 项目         | 生产端口块    | Web     | API     | Admin   |
+| ------------ | ------------- | ------- | ------- | ------- |
+| drinkzen     | `31010-31019` | `31010` | `31011` | `31012` |
 | party-helper | `31020-31029` | `31020` | `31021` | `31022` |
-| ai-todo | `31030-31039` | `31030` | `31031` | `31032` |
+| ai-todo      | `31030-31039` | `31030` | `31031` | `31032` |
 
 未部署的角色只保留编号，不创建 Service 或开放安全组端口。
 
 ## 当前迁移状态
 
-| 项目 | 角色 | 当前端点 | 目标 NodePort | 状态 |
-|------|------|----------|----------------|------|
-| xiaolin-docs | web | `124.222.98.227:8080` | legacy host port | 在用 |
-| xiaolin-life | web | `124.222.98.227:8081` | legacy host port | 在用 |
-| ai-todo | api/web | `111.229.38.208:30082` | `31031` | 后续独立迁移 |
-| drinkzen | api/web | `111.229.38.208:8020` | `31011` | 本轮优先迁移 |
-| drinkzen | admin | `111.229.38.208:8030` | `31012` | 本轮优先迁移 |
-| party-helper | api | `111.229.38.208:30021` | `31021` | 后续独立迁移 |
-| party-helper | admin | `111.229.38.208:30024` | `31022` | 接入公网前迁移 |
-| ai-todo staging | api/web | `121.199.175.147:8083` | legacy host port | 在用 |
+| 项目            | 角色    | 当前端点               | 目标 NodePort    | 状态                        |
+| --------------- | ------- | ---------------------- | ---------------- | --------------------------- |
+| xiaolin-docs    | web     | `124.222.98.227:8080`  | legacy host port | 在用                        |
+| xiaolin-life    | web     | `124.222.98.227:8081`  | legacy host port | 在用                        |
+| ai-todo         | api/web | `111.229.38.208:30082` | `31031`          | 后续独立迁移                |
+| drinkzen        | api/web | `111.229.38.208:8020`  | `31011`          | v0.8.9 清单就绪，待部署切流 |
+| drinkzen        | admin   | `111.229.38.208:8030`  | `31012`          | v0.8.9 清单就绪，待部署切流 |
+| party-helper    | api     | `111.229.38.208:30021` | `31021`          | 后续独立迁移                |
+| party-helper    | admin   | `111.229.38.208:30024` | `31022`          | 接入公网前迁移              |
+| ai-todo staging | api/web | `121.199.175.147:8083` | legacy host port | 在用                        |
 
 124 上的 legacy 内容服务不纳入本轮 k3s NodePort 改造；迁移到 111 时再分配对应项目端口块。
 
@@ -75,18 +75,18 @@ spec:
       nodePort: 31011
 ```
 
-原 `drinkzen-api`、`drinkzen-admin` Service 在网关切换完成后改为 ClusterIP。k3s ServiceLB 暂不全局禁用，待确认没有其他业务依赖后再单独处理。
+drinkzen `v0.8.9` 起，原 `drinkzen-api`、`drinkzen-admin` Service 固定为 ClusterIP，生产 overlay 额外创建上述 gateway NodePort Service。本地开发 overlay 仍可显式使用 LoadBalancer，不属于生产暴露面。k3s ServiceLB 暂不全局禁用，待确认没有其他业务依赖后再单独处理。
 
 安全组只允许 `101.34.78.2/32` 访问已经启用的生产 NodePort；不向公网开放整个 `30000-32767` 范围。
 
 ## 变更流程
 
 1. 盘点 `kubectl get svc -A`，确认目标 NodePort 未被占用。
-2. 在业务仓增加并部署并行 `<service>-gateway` NodePort Service。
+2. 在业务仓增加并部署并行 `<service>-gateway` NodePort Service，同时将生产内部 Service 收敛为 ClusterIP。
 3. 安全组仅对 101 开放目标端口。
 4. 从 101 验证 NodePort 的 HTTP 和 `/healthz`。
 5. 修改 Nginx upstream，完成 `nginx -t` 和网关部署。
-6. 公网验证稳定后，将原 LoadBalancer Service 改为 ClusterIP。
-7. 最后切换 DNS并加入 Uptime Probe。
+6. 确认业务命名空间不存在 LoadBalancer Service，NodePort 只允许网关来源访问。
+7. 最后切换 DNS 并加入 Uptime Probe。
 
 不同项目分别迁移和回滚，不在一个发布窗口同时改端口。
