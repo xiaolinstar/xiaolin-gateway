@@ -37,6 +37,9 @@ jobs:
           - name: drinkzen
             host: drinkzen.cn
             url: https://drinkzen.cn/healthz
+          - name: drinkzen-www
+            host: www.drinkzen.cn
+            url: https://www.drinkzen.cn/healthz
           - name: drinkzen-api
             host: api.drinkzen.cn
             url: https://api.drinkzen.cn/healthz

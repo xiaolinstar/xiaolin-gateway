@@ -25,6 +25,7 @@ Internet → nginx-gateway (80/443)
 | ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ✅ 同上 |
 | drink | ② 应用 | `www.wodi.games` | `app/drink-budget/drink-budget.conf` | `drink-budget-api` | `111.229.38.208:8020` | [drink-budget](https://github.com/xiaolinstar/drink-budget) | ✅ `GET /healthz` |
 | drinkzen | ② 应用 | `drinkzen.cn` | `app/drinkzen/drinkzen.conf` | `drinkzen-api`（过渡） | `111.229.38.208:31011` | [drinkzen](https://github.com/xiaolinstar/drinkzen) | ✅ `GET /healthz` |
+| drinkzen-www | ① 跳转 | `www.drinkzen.cn` | 同上 | 301 → `drinkzen.cn` | — | drinkzen | 跟随跳转后 `GET /healthz` |
 | drinkzen-api | ② 应用 | `api.drinkzen.cn` | 同上 | `drinkzen-api` | `111.229.38.208:31011` | drinkzen | ✅ `GET /healthz` |
 | drinkzen-admin | ② 应用 | `admin.drinkzen.cn` | 同上 | `drinkzen-admin` | `111.229.38.208:31012` | drinkzen | ✅ `GET /healthz` |
 | party | ② 应用 | `api.wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-api` | `111.229.38.208:30021` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz` |
@@ -39,7 +40,7 @@ Internet → nginx-gateway (80/443)
 | 业务 API | `drinkzen-api` | NodePort `31011` | 固定生产契约 |
 | 管理后台 | `drinkzen-admin` | NodePort `31012` | 固定生产契约 |
 
-Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://drinkzen-web`，API 域名和管理后台无需改动。当前 `drinkzen.cn` 证书的 SAN 已覆盖 `www.drinkzen.cn`；待 `www` DNS 启用后，在 Nginx 中增加到根域名的 301 跳转即可。
+Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://drinkzen-web`，API 域名和管理后台无需改动。当前 `drinkzen.cn` 证书的 SAN 已覆盖 `www.drinkzen.cn`；`www` 的 HTTP/HTTPS 请求统一 301 到根域名。
 
 ### 证书目录（git 忽略，服务器手动上传）
 
@@ -65,6 +66,7 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | drink-budget | `https://www.wodi.games/healthz` |
 | party-helper | `https://api.wodi.games/healthz` |
 | drinkzen | `https://drinkzen.cn/healthz` |
+| drinkzen-www | `https://www.drinkzen.cn/healthz`（301 到根域名） |
 | drinkzen-api | `https://api.drinkzen.cn/healthz` |
 | drinkzen-admin | `https://admin.drinkzen.cn/healthz` |
 
