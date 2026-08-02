@@ -25,14 +25,11 @@ xiaolin-gateway/
 │   ├── ai-todo/                # ai-todo API
 │   │   ├── ai-todo.conf        # xingxiaolin.cn → 111:30082 (K8s)
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   ├── drink-budget/           # 旧 drink-budget（迁移期间保留）
-│   │   ├── drink-budget.conf   # wodi.games → :8020
-│   │   └── cert/               # SSL 证书（git 忽略）
 │   ├── drinkzen/               # drinkzen（奶茶仙人）
 │   │   ├── drinkzen.conf       # drinkzen.cn/API → 111:31011 / admin → 111:31012
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   └── party-helper/           # party-helper API
-│       ├── party-helper.conf   # api.wodi.games → 111:30021
+│   └── party-helper/           # Party Helper
+│       ├── party-helper.conf   # wodi.games/API → 111:30021 / admin → 111:30024
 │       └── cert/               # SSL 证书（git 忽略）
 ├── docs/                       # 规范与说明
 │   ├── routing-registry.md     # 域名 / upstream / 负责仓库（真源）
@@ -261,9 +258,9 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 | xiaolin-life | https://www.xiaolin.fun/healthz |
 | ai-todo | https://www.xingxiaolin.cn/healthz |
 | ai-todo-staging | https://www.staging.xingxiaolin.cn/healthz |
-| drink-budget | https://www.wodi.games/healthz |
-| drink-budget-admin | https://admin.wodi.games/ |
-| party-helper | https://api.wodi.games/healthz |
+| party-helper-root | https://www.wodi.games/healthz（301 到 API） |
+| party-helper-admin | https://admin.wodi.games/healthz |
+| party-helper-api | https://api.wodi.games/healthz |
 | drinkzen | https://drinkzen.cn/healthz |
 | drinkzen-www | https://www.drinkzen.cn/healthz（301 到根域名） |
 | drinkzen-api | https://api.drinkzen.cn/healthz |

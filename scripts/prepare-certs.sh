@@ -30,9 +30,8 @@ gen app/drinkzen/cert drinkzen.cn.key drinkzen.cn_bundle.crt
 gen app/drinkzen/cert api.drinkzen.cn.key api.drinkzen.cn_bundle.crt
 gen app/drinkzen/cert admin.drinkzen.cn.key admin.drinkzen.cn_bundle.crt
 
-gen app/drink-budget/cert wodi.games.key wodi.games_bundle.crt
-gen app/drink-budget/cert admin.wodi.games.key admin.wodi.games_bundle.crt
-
+gen app/party-helper/cert wodi.games.key wodi.games_bundle.crt
 gen app/party-helper/cert api.wodi.games.key api.wodi.games_bundle.crt
+gen app/party-helper/cert admin.wodi.games.key admin.wodi.games_bundle.crt
 
 echo "dummy certs ready under app/*/cert/"

@@ -26,7 +26,7 @@
 | 类型 | 实现 | 示例 |
 |------|------|------|
 | 内容站 nginx | `location = /healthz { return 204; }` | xiaolin-docs、xiaolin-life |
-| API 服务 | 轻量 handler，不查 DB | party-helper、drink-budget |
+| API 服务 | 轻量 handler，不查 DB | party-helper、drinkzen |
 | API 深度检查 | **不用** `/healthz`；保留业务路径 | ai-todo：`/v1/health`、`/v1/health/db` 供 CD/monitor |
 
 ```text
@@ -54,9 +54,9 @@ https://<对外域名>/healthz
 | xiaolin-life | www.xiaolin.fun | `/healthz` | nginx 204 | `volumes/website/default.conf` |
 | ai-todo | www.xingxiaolin.cn | `/healthz` | 200 文本 `ok` | CD 仍用 `/v1/health*` |
 | ai-todo-staging | www.staging.xingxiaolin.cn | `/healthz` | 同上 | staging VPS |
-| drink-budget | www.wodi.games | `/healthz` | 200 JSON | `/health` 保留兼容 |
-| drink-budget-admin | admin.wodi.games | `/` | 待实现 | |
-| party-helper | api.wodi.games | `/healthz` | 200 JSON | |
+| party-helper-root | www.wodi.games | `/healthz` | 301 到 API | Uptime 跟随跳转 |
+| party-helper-admin | admin.wodi.games | `/healthz` | 200 | NodePort `30024` |
+| party-helper-api | api.wodi.games | `/healthz` | 200 JSON | NodePort `30021` |
 | drinkzen | drinkzen.cn | `/healthz` | 200 JSON | 当前与 API 共用服务 |
 | drinkzen-www | www.drinkzen.cn | `/healthz` | 301 到根域名 | Uptime 跟随跳转 |
 | drinkzen-api | api.drinkzen.cn | `/healthz` | 200 JSON | NodePort `31011` |
