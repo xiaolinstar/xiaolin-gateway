@@ -25,13 +25,13 @@ jobs:
           - name: ai-todo-staging
             host: www.staging.xingxiaolin.cn
             url: https://www.staging.xingxiaolin.cn/healthz
-          - name: drink-budget
+          - name: party-helper-root
             host: www.wodi.games
             url: https://www.wodi.games/healthz
-          - name: drink-budget-admin
+          - name: party-helper-admin
             host: admin.wodi.games
-            url: https://admin.wodi.games/
-          - name: party-helper
+            url: https://admin.wodi.games/healthz
+          - name: party-helper-api
             host: api.wodi.games
             url: https://api.wodi.games/healthz
           - name: drinkzen

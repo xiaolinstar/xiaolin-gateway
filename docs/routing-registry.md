@@ -23,12 +23,13 @@ Internet → nginx-gateway (80/443)
 | life | ③ 内容 | `www.xiaolin.fun` | `app/xiaolin-life/xiaolin-life.conf` | `xiaolin-life` | `124.222.98.227:8081` | [xiaolin-life](https://github.com/xiaolinstar/xiaolin-life) | ✅ `GET /healthz` |
 | ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `111.229.38.208:30082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
 | ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ✅ 同上 |
-| drink | ② 应用 | `www.wodi.games` | `app/drink-budget/drink-budget.conf` | `drink-budget-api` | `111.229.38.208:8020` | [drink-budget](https://github.com/xiaolinstar/drink-budget) | ✅ `GET /healthz` |
+| party-root | ① 跳转 | `wodi.games`、`www.wodi.games` | `app/party-helper/party-helper.conf` | 301 → `api.wodi.games` | — | [party-helper](https://github.com/xiaolinstar/party-helper) | 跟随跳转后 `GET /healthz` |
 | drinkzen | ② 应用 | `drinkzen.cn` | `app/drinkzen/drinkzen.conf` | `drinkzen-api`（过渡） | `111.229.38.208:31011` | [drinkzen](https://github.com/xiaolinstar/drinkzen) | ✅ `GET /healthz` |
 | drinkzen-www | ① 跳转 | `www.drinkzen.cn` | 同上 | 301 → `drinkzen.cn` | — | drinkzen | 跟随跳转后 `GET /healthz` |
 | drinkzen-api | ② 应用 | `api.drinkzen.cn` | 同上 | `drinkzen-api` | `111.229.38.208:31011` | drinkzen | ✅ `GET /healthz` |
 | drinkzen-admin | ② 应用 | `admin.drinkzen.cn` | 同上 | `drinkzen-admin` | `111.229.38.208:31012` | drinkzen | ✅ `GET /healthz` |
-| party | ② 应用 | `api.wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-api` | `111.229.38.208:30021` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz` |
+| party-api | ② 应用 | `api.wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-api` | `111.229.38.208:30021` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz` |
+| party-admin | ② 应用 | `admin.wodi.games` | 同上 | `party-helper-admin` | `111.229.38.208:30024` | party-helper | ✅ `GET /healthz` |
 
 ### drinkzen Web 拆分计划
 
@@ -49,9 +50,8 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | xiaolin-docs | `app/xiaolin-docs/cert/` | `xiaolinstar.cn_*`、`.com/` 子目录 |
 | xiaolin-life | `app/xiaolin-life/cert/` | `xiaolin.fun_*` |
 | ai-todo | `app/ai-todo/cert/` | `www.xingxiaolin.cn.pem`、`www.staging.xingxiaolin.cn.pem` |
-| drink-budget | `app/drink-budget/cert/` | `wodi.games_*` |
 | drinkzen | `app/drinkzen/cert/` | `drinkzen.cn_*`、`api.drinkzen.cn_*`、`admin.drinkzen.cn_*` |
-| party-helper | `app/party-helper/cert/` | `api.wodi.games_*` |
+| party-helper | `app/party-helper/cert/` | `wodi.games_*`、`api.wodi.games_*`、`admin.wodi.games_*` |
 
 ## 外部探活（uptime.yml）
 
@@ -63,8 +63,9 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | xiaolin-life | `https://www.xiaolin.fun/healthz` |
 | ai-todo | `https://www.xingxiaolin.cn/healthz` |
 | ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` |
-| drink-budget | `https://www.wodi.games/healthz` |
-| party-helper | `https://api.wodi.games/healthz` |
+| party-helper-root | `https://www.wodi.games/healthz`（301 到 API） |
+| party-helper-api | `https://api.wodi.games/healthz` |
+| party-helper-admin | `https://admin.wodi.games/healthz` |
 | drinkzen | `https://drinkzen.cn/healthz` |
 | drinkzen-www | `https://www.drinkzen.cn/healthz`（301 到根域名） |
 | drinkzen-api | `https://api.drinkzen.cn/healthz` |

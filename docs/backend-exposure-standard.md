@@ -28,12 +28,12 @@
 
 ## 目标端口分配
 
-生产使用 `31000-31999`，staging 使用 `32000-32767`。每个项目保留连续 10 个端口，角色偏移固定为：Web `+0`、API `+1`、Admin `+2`。
+新项目生产使用 `31000-31999`，staging 使用 `32000-32767`。新端口块的角色偏移为 Web `+0`、API `+1`、Admin `+2`。已上线的 Party Helper 保留既有 `30020-30029` 专属块与生产 Admin `30024`，避免仅为编号一致性迁移稳定 NodePort。
 
 | 项目         | 生产端口块    | Web     | API     | Admin   |
 | ------------ | ------------- | ------- | ------- | ------- |
 | drinkzen     | `31010-31019` | `31010` | `31011` | `31012` |
-| party-helper | `31020-31029` | `31020` | `31021` | `31022` |
+| party-helper | `30020-30029` | `30020`（预留） | `30021` | `30024` |
 | ai-todo      | `31030-31039` | `31030` | `31031` | `31032` |
 
 未部署的角色只保留编号，不创建 Service 或开放安全组端口。
@@ -45,10 +45,10 @@
 | xiaolin-docs    | web     | `124.222.98.227:8080`  | legacy host port | 在用                        |
 | xiaolin-life    | web     | `124.222.98.227:8081`  | legacy host port | 在用                        |
 | ai-todo         | api/web | `111.229.38.208:30082` | `31031`          | 后续独立迁移                |
-| drinkzen        | api/web | `111.229.38.208:8020`  | `31011`          | v0.8.9 清单就绪，待部署切流 |
-| drinkzen        | admin   | `111.229.38.208:8030`  | `31012`          | v0.8.9 清单就绪，待部署切流 |
-| party-helper    | api     | `111.229.38.208:30021` | `31021`          | 后续独立迁移                |
-| party-helper    | admin   | `111.229.38.208:30024` | `31022`          | 接入公网前迁移              |
+| drinkzen        | api/web | `111.229.38.208:31011` | `31011`          | 已完成                      |
+| drinkzen        | admin   | `111.229.38.208:31012` | `31012`          | 已完成                      |
+| party-helper    | api     | `111.229.38.208:30021` | `30021`          | 已完成                      |
+| party-helper    | admin   | `111.229.38.208:30024` | `30024`          | 服务已就绪，待网关切流      |
 | ai-todo staging | api/web | `121.199.175.147:8083` | legacy host port | 在用                        |
 
 124 上的 legacy 内容服务不纳入本轮 k3s NodePort 改造；迁移到 111 时再分配对应项目端口块。
@@ -78,6 +78,16 @@ spec:
 drinkzen `v0.8.9` 起，原 `drinkzen-api`、`drinkzen-admin` Service 固定为 ClusterIP，生产 overlay 额外创建上述 gateway NodePort Service。本地开发 overlay 仍可显式使用 LoadBalancer，不属于生产暴露面。k3s ServiceLB 暂不全局禁用，待确认没有其他业务依赖后再单独处理。
 
 安全组只允许 `101.34.78.2/32` 访问已经启用的生产 NodePort；不向公网开放整个 `30000-32767` 范围。
+
+## 分层拨测
+
+安全组收口后不直接从公网探测 NodePort，而是分三层覆盖故障面：
+
+1. GitHub Uptime 访问 `https://<domain>/healthz`，验证 DNS、TLS、101 Nginx、111 NodePort 与 Pod 的完整用户链路。
+2. 101 网关侧访问 `http://111.229.38.208:<nodePort>/healthz`，定位网关到后端的链路；可由 Prometheus Blackbox Exporter 或受控定时任务持续执行。
+3. 111 k3s 使用 startup/readiness/liveness Probe，并在业务 CD 中从节点本机访问 NodePort，验证 Service、Endpoint 与 Pod。
+
+只有 101 需要跨公网访问 NodePort；GitHub Runner 无需获得 NodePort 白名单。
 
 ## 变更流程
 
