@@ -36,7 +36,7 @@ Body: ok
 
 ## 外部探活（uptime.yml）
 
-`.github/workflows/uptime.yml` 从 GitHub Runner 每 15 分钟请求各域名，并使用 `curl --fail`（非 2xx 视为失败）。同时检查 TLS 证书是否在 14 天内过期。
+`.github/workflows/uptime.yml` 从 GitHub Runner 每 15 分钟请求各域名，并使用 `curl --fail`（非 2xx 视为失败）。同时检查 TLS 证书是否在 7 天内过期。
 
 **统一 URL 格式：**
 
