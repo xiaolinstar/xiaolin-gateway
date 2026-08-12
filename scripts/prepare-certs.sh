@@ -18,8 +18,6 @@ gen() {
 }
 
 gen app/xiaolin-docs/cert xiaolinstar.cn.key xiaolinstar.cn_bundle.crt
-mkdir -p app/xiaolin-docs/cert/xiaolinstar.com
-gen app/xiaolin-docs/cert/xiaolinstar.com xiaolinstar.com.key xiaolinstar.com_bundle.crt
 
 gen app/xiaolin-life/cert xiaolin.fun.key xiaolin.fun_bundle.crt
 
