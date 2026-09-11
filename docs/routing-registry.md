@@ -21,7 +21,6 @@ Internet → nginx-gateway (80/443)
 | docs | ③ 内容 | `www.xiaolinstar.cn` | `app/xiaolin-docs/xiaolin-docs.conf` | `xiaolin-service` | `124.222.98.227:8080` | [xiaolin-docs](https://github.com/xiaolinstar/xiaolin-docs) | ✅ `GET /healthz` |
 | life | ③ 内容 | `www.xiaolin.fun` | `app/xiaolin-life/xiaolin-life.conf` | `xiaolin-life` | `124.222.98.227:8081` | [xiaolin-life](https://github.com/xiaolinstar/xiaolin-life) | ✅ `GET /healthz` |
 | ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `111.229.38.208:30082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
-| ai-todo-stg | ② 应用 | `www.staging.xingxiaolin.cn` | 同上 | `ai-todo-api-staging` | `121.199.175.147:8083` | ai-todo | ✅ 同上 |
 | party-root | ① 跳转 | `wodi.games`、`www.wodi.games` | `app/party-helper/party-helper.conf` | 301 → `api.wodi.games` | — | [party-helper](https://github.com/xiaolinstar/party-helper) | 跟随跳转后 `GET /healthz` |
 | drinkzen | ② 应用 | `drinkzen.cn` | `app/drinkzen/drinkzen.conf` | `drinkzen-api`（过渡） | `111.229.38.208:31011` | [drinkzen](https://github.com/xiaolinstar/drinkzen) | ✅ `GET /healthz` |
 | drinkzen-www | ① 跳转 | `www.drinkzen.cn` | 同上 | 301 → `drinkzen.cn` | — | drinkzen | 跟随跳转后 `GET /healthz` |
@@ -48,7 +47,7 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 |------|------------|------------|
 | xiaolin-docs | `app/xiaolin-docs/cert/` | `xiaolinstar.cn_*` |
 | xiaolin-life | `app/xiaolin-life/cert/` | `xiaolin.fun_*` |
-| ai-todo | `app/ai-todo/cert/` | `www.xingxiaolin.cn.pem`、`www.staging.xingxiaolin.cn.pem` |
+| ai-todo | `app/ai-todo/cert/` | `www.xingxiaolin.cn.pem` |
 | drinkzen | `app/drinkzen/cert/` | `drinkzen.cn_*`、`api.drinkzen.cn_*`、`admin.drinkzen.cn_*` |
 | party-helper | `app/party-helper/cert/` | `wodi.games_*`、`api.wodi.games_*`、`admin.wodi.games_*` |
 
@@ -61,7 +60,6 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | xiaolinstar | `https://www.xiaolinstar.cn/healthz` |
 | xiaolin-life | `https://www.xiaolin.fun/healthz` |
 | ai-todo | `https://www.xingxiaolin.cn/healthz` |
-| ai-todo-staging | `https://www.staging.xingxiaolin.cn/healthz` |
 | party-helper-root | `https://www.wodi.games/healthz`（301 到 API） |
 | party-helper-api | `https://api.wodi.games/healthz` |
 | party-helper-admin | `https://admin.wodi.games/healthz` |

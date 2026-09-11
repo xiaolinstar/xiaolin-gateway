@@ -22,9 +22,6 @@ jobs:
           - name: ai-todo
             host: www.xingxiaolin.cn
             url: https://www.xingxiaolin.cn/healthz
-          - name: ai-todo-staging
-            host: www.staging.xingxiaolin.cn
-            url: https://www.staging.xingxiaolin.cn/healthz
           - name: party-helper-root
             host: www.wodi.games
             url: https://www.wodi.games/healthz

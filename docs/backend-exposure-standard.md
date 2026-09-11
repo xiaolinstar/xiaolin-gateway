@@ -49,7 +49,6 @@
 | drinkzen        | admin   | `111.229.38.208:31012` | `31012`          | 已完成                      |
 | party-helper    | api     | `111.229.38.208:30021` | `30021`          | 已完成                      |
 | party-helper    | admin   | `111.229.38.208:30024` | `30024`          | 服务已就绪，待网关切流      |
-| ai-todo staging | api/web | `121.199.175.147:8083` | legacy host port | 在用                        |
 
 124 上的 legacy 内容服务不纳入本轮 k3s NodePort 改造；迁移到 111 时再分配对应项目端口块。
 

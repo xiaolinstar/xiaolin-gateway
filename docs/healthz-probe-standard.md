@@ -53,7 +53,6 @@ https://<对外域名>/healthz
 | xiaolinstar | www.xiaolinstar.cn | `/healthz` | nginx 204 | 内容站 |
 | xiaolin-life | www.xiaolin.fun | `/healthz` | nginx 204 | `volumes/website/default.conf` |
 | ai-todo | www.xingxiaolin.cn | `/healthz` | 200 文本 `ok` | CD 仍用 `/v1/health*` |
-| ai-todo-staging | www.staging.xingxiaolin.cn | `/healthz` | 同上 | staging VPS |
 | party-helper-root | www.wodi.games | `/healthz` | 301 到 API | Uptime 跟随跳转 |
 | party-helper-admin | admin.wodi.games | `/healthz` | 200 | NodePort `30024` |
 | party-helper-api | api.wodi.games | `/healthz` | 200 JSON | NodePort `30021` |
