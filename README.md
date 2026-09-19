@@ -19,9 +19,6 @@ xiaolin-gateway/
 │   ├── xiaolin-docs/           # xiaolin-docs 项目
 │   │   ├── xiaolin-docs.conf   # Nginx vhost 配置
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   ├── xiaolin-life/           # xiaolin-life 项目
-│   │   ├── xiaolin-life.conf   # Nginx vhost 配置
-│   │   └── cert/               # SSL 证书（git 忽略）
 │   ├── ai-todo/                # ai-todo API
 │   │   ├── ai-todo.conf        # xingxiaolin.cn → 111:30082 (K8s)
 │   │   └── cert/               # SSL 证书（git 忽略）
@@ -255,9 +252,7 @@ docker run --rm --entrypoint amtool -v "$PWD/observability/alertmanager:/etc/ale
 | 子系统 | 探活 URL |
 |--------|----------|
 | xiaolinstar | https://www.xiaolinstar.cn/healthz |
-| xiaolin-life | https://www.xiaolin.fun/healthz |
 | ai-todo | https://www.xingxiaolin.cn/healthz |
-| ai-todo-staging | https://www.staging.xingxiaolin.cn/healthz |
 | party-helper-root | https://www.wodi.games/healthz（301 到 API） |
 | party-helper-admin | https://admin.wodi.games/healthz |
 | party-helper-api | https://api.wodi.games/healthz |

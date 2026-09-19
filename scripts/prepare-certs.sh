@@ -19,8 +19,6 @@ gen() {
 
 gen app/xiaolin-docs/cert xiaolinstar.cn.key xiaolinstar.cn_bundle.crt
 
-gen app/xiaolin-life/cert xiaolin.fun.key xiaolin.fun_bundle.crt
-
 gen app/ai-todo/cert www.xingxiaolin.cn.key www.xingxiaolin.cn.pem
 
 gen app/drinkzen/cert drinkzen.cn.key drinkzen.cn_bundle.crt

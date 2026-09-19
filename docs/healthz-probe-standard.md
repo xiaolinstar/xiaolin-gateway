@@ -25,7 +25,7 @@
 
 | 类型 | 实现 | 示例 |
 |------|------|------|
-| 内容站 nginx | `location = /healthz { return 204; }` | xiaolin-docs、xiaolin-life |
+| 内容站 nginx | `location = /healthz { return 204; }` | xiaolin-docs |
 | API 服务 | 轻量 handler，不查 DB | party-helper、drinkzen |
 | API 深度检查 | **不用** `/healthz`；保留业务路径 | ai-todo：`/v1/health`、`/v1/health/db` 供 CD/monitor |
 
@@ -51,7 +51,6 @@ https://<对外域名>/healthz
 | 子系统 | 对外域名 | uptime 探测 | 后端实现 | 备注 |
 |--------|----------|-------------|----------|------|
 | xiaolinstar | www.xiaolinstar.cn | `/healthz` | nginx 204 | 内容站 |
-| xiaolin-life | www.xiaolin.fun | `/healthz` | nginx 204 | `volumes/website/default.conf` |
 | ai-todo | www.xingxiaolin.cn | `/healthz` | 200 文本 `ok` | CD 仍用 `/v1/health*` |
 | party-helper-root | www.wodi.games | `/healthz` | 301 到 API | Uptime 跟随跳转 |
 | party-helper-admin | admin.wodi.games | `/healthz` | 200 | NodePort `30024` |

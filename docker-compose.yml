@@ -9,7 +9,6 @@ services:
       - ./app/gateway.conf:/etc/nginx/conf.d/default.conf:ro
       - ./app:/etc/nginx/app:ro
       - ./app/xiaolin-docs/cert:/etc/nginx/cert/xiaolin-docs:ro
-      - ./app/xiaolin-life/cert:/etc/nginx/cert/xiaolin-life:ro
       - ./app/ai-todo/cert:/etc/nginx/cert/ai-todo:ro
       - ./app/drinkzen/cert:/etc/nginx/cert/drinkzen:ro
       - ./app/party-helper/cert:/etc/nginx/cert/party-helper:ro
