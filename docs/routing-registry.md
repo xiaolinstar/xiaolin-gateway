@@ -20,7 +20,8 @@ Internet → nginx-gateway (80/443)
 |----|-----|----------|--------------|----------|----------|----------|---------|
 | docs | ③ 内容 | `www.xiaolinstar.cn` | `app/xiaolin-docs/xiaolin-docs.conf` | `xiaolin-service` | `124.222.98.227:8080` | [xiaolin-docs](https://github.com/xiaolinstar/xiaolin-docs) | ✅ `GET /healthz` |
 | ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `111.229.38.208:30082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
-| party-root | ① 跳转 | `wodi.games`、`www.wodi.games` | `app/party-helper/party-helper.conf` | 301 → `api.wodi.games` | — | [party-helper](https://github.com/xiaolinstar/party-helper) | 跟随跳转后 `GET /healthz` |
+| party-root | ② 应用 | `wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-web` | `111.229.38.208:30020` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz`，200 JSON |
+| party-www | ① 跳转 | `www.wodi.games` | 同上 | 301 → `wodi.games`，保留路径和查询参数 | — | party-helper | 跟随跳转后 `GET /healthz` |
 | drinkzen | ② 应用 | `drinkzen.cn` | `app/drinkzen/drinkzen.conf` | `drinkzen-api`（过渡） | `111.229.38.208:31011` | [drinkzen](https://github.com/xiaolinstar/drinkzen) | ✅ `GET /healthz` |
 | drinkzen-www | ① 跳转 | `www.drinkzen.cn` | 同上 | 301 → `drinkzen.cn` | — | drinkzen | 跟随跳转后 `GET /healthz` |
 | drinkzen-api | ② 应用 | `api.drinkzen.cn` | 同上 | `drinkzen-api` | `111.229.38.208:31011` | drinkzen | ✅ `GET /healthz` |
@@ -57,7 +58,8 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 |----|----------|
 | xiaolinstar | `https://www.xiaolinstar.cn/healthz` |
 | ai-todo | `https://www.xingxiaolin.cn/healthz` |
-| party-helper-root | `https://www.wodi.games/healthz`（301 到 API） |
+| party-helper-root | `https://wodi.games/healthz`（H5，200 JSON） |
+| party-helper-www | `https://www.wodi.games/healthz`（301 到根域名） |
 | party-helper-api | `https://api.wodi.games/healthz` |
 | party-helper-admin | `https://admin.wodi.games/healthz` |
 | drinkzen | `https://drinkzen.cn/healthz` |
@@ -84,3 +86,7 @@ drinkzen 的三个公网入口已完成 DNS、TLS 和 `/healthz` 预检，并纳
 | API 发版 | ② 业务仓 CD；gateway 不动 |
 | 文档/内容发版 | ③ 内容仓 CD；gateway 不动 |
 | 换 VPS IP 或端口 | ① gateway upstream + ②/③ deploy 文档 |
+
+## Party Helper H5 联机入口
+
+`wodi.games` 由 H5 Nginx 同源转发 `/online/*` 与 `/online/socket.io`，联机服务仅使用集群内 ClusterIP，不增加公网端口。网关覆盖 `X-Real-IP` 与 `X-Forwarded-For`，H5 仅信任网关 `101.34.78.2`；生产 Web NodePort 使用 `externalTrafficPolicy: Local` 保留来源 IP，所以 `111.229.38.208` 节点必须有就绪 H5 Pod。安全组仅允许 `101.34.78.2/32` 访问 `30020`。网关发布前先检查 H5、联机后端健康与真实根域名／www 证书，失败不切换配置。

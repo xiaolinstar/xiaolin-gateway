@@ -20,6 +20,9 @@ jobs:
             host: www.xingxiaolin.cn
             url: https://www.xingxiaolin.cn/healthz
           - name: party-helper-root
+            host: wodi.games
+            url: https://wodi.games/healthz
+          - name: party-helper-www
             host: www.wodi.games
             url: https://www.wodi.games/healthz
           - name: party-helper-admin

@@ -52,7 +52,8 @@ https://<对外域名>/healthz
 |--------|----------|-------------|----------|------|
 | xiaolinstar | www.xiaolinstar.cn | `/healthz` | nginx 204 | 内容站 |
 | ai-todo | www.xingxiaolin.cn | `/healthz` | 200 文本 `ok` | CD 仍用 `/v1/health*` |
-| party-helper-root | www.wodi.games | `/healthz` | 301 到 API | Uptime 跟随跳转 |
+| party-helper-root | wodi.games | `/healthz` | 200 JSON（H5） | NodePort `30020` |
+| party-helper-www | www.wodi.games | `/healthz` | 301 到根域名 | Uptime 跟随跳转 |
 | party-helper-admin | admin.wodi.games | `/healthz` | 200 | NodePort `30024` |
 | party-helper-api | api.wodi.games | `/healthz` | 200 JSON | NodePort `30021` |
 | drinkzen | drinkzen.cn | `/healthz` | 200 JSON | 当前与 API 共用服务 |
