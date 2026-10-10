@@ -89,4 +89,4 @@ drinkzen 的三个公网入口已完成 DNS、TLS 和 `/healthz` 预检，并纳
 
 ## Party Helper H5 联机入口
 
-`wodi.games` 由 H5 Nginx 同源转发 `/online/*` 与 `/online/socket.io`，联机服务仅使用集群内 ClusterIP，不增加公网端口。网关覆盖 `X-Real-IP` 与 `X-Forwarded-For`，H5 仅信任网关 `101.34.78.2`；生产 Web NodePort 使用 `externalTrafficPolicy: Local` 保留来源 IP，所以 `111.229.38.208` 节点必须有就绪 H5 Pod。安全组仅允许 `101.34.78.2/32` 访问 `30020`。网关发布前先检查 H5、联机后端健康与真实根域名／www 证书，失败不切换配置。
+`wodi.games` 由 H5 Nginx 同源转发 `/online/*` 与 `/online/socket.io`，联机服务仅使用集群内 ClusterIP，不增加公网端口。网关覆盖 `X-Real-IP` 与 `X-Forwarded-For`，H5 仅信任网关 `101.34.78.2`；生产 Web 使用单个 `party-helper-web` NodePort Service（同时提供 ClusterIP），并通过 `externalTrafficPolicy: Local` 保留来源 IP，所以 `111.229.38.208` 节点必须有就绪 H5 Pod。安全组仅允许 `101.34.78.2/32` 访问 `30020`。网关发布前先检查 H5、联机后端健康与真实根域名／www 证书，失败不切换配置。

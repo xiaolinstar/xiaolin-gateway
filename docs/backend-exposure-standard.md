@@ -54,7 +54,9 @@
 
 ## Service 结构
 
-每个对外角色保留业务内部 ClusterIP Service，并额外建立只供 101 网关访问的 `<service>-gateway` NodePort Service。以 drinkzen API 为例：
+同一组 Pod 可使用单个生产 NodePort Service：它自带 ClusterIP，集群内部和外部网关共用同一对象。本地 base 保持 ClusterIP，生产 overlay patch 为 NodePort；无需仅为了内部访问再声明一个相同选择器的 Service。Party Helper Web 采用此方案，`party-helper-web` 提供 NodePort `30020`，Realtime 只经 H5 同源代理，保留 ClusterIP。
+
+Drinkzen 当前保留既有双 Service 结构，本次不迁移该项目。以下为其现状示例：
 
 ```yaml
 apiVersion: v1
