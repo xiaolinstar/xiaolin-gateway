@@ -19,7 +19,7 @@ gen() {
 
 gen app/xiaolin-docs/cert xiaolinstar.cn.key xiaolinstar.cn_bundle.crt
 
-gen app/ai-todo/cert www.xingxiaolin.cn.key www.xingxiaolin.cn.pem
+gen app/ai-todo/cert xingxiaolin.cn.key xingxiaolin.cn.pem
 
 gen app/drinkzen/cert drinkzen.cn.key drinkzen.cn_bundle.crt
 gen app/drinkzen/cert api.drinkzen.cn.key api.drinkzen.cn_bundle.crt

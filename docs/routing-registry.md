@@ -46,7 +46,7 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | 项目 | 宿主机路径 | 文件名模式 |
 |------|------------|------------|
 | xiaolin-docs | `app/xiaolin-docs/cert/` | `xiaolinstar.cn_*` |
-| ai-todo | `app/ai-todo/cert/` | `www.xingxiaolin.cn.pem` |
+| ai-todo | `app/ai-todo/cert/` | `xingxiaolin.cn.pem` |
 | drinkzen | `app/drinkzen/cert/` | `drinkzen.cn_*`、`api.drinkzen.cn_*`、`admin.drinkzen.cn_*` |
 | party-helper | `app/party-helper/cert/` | `wodi.games_*`、`api.wodi.games_*`、`admin.wodi.games_*` |
 
