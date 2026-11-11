@@ -34,6 +34,14 @@ jobs:
           bash scripts/prepare-certs.sh
       - name: Test production config
         run: docker compose run --rm nginx-gateway nginx -t
+      - name: Test tencent-101 overlay
+        run: |
+          COMPOSE_FILE=docker-compose.yml:docker-compose.tencent-101.yml \
+            docker compose run --rm nginx-gateway nginx -t
+      - name: Test aliyun-121 overlay
+        run: |
+          COMPOSE_FILE=docker-compose.yml:docker-compose.aliyun-121.yml \
+            docker compose run --rm nginx-gateway nginx -t
       - name: Test local config overlay
         run: |
           cp .env.local.example .env.local
