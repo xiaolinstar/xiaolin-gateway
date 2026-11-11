@@ -3,13 +3,16 @@ name: CD Pipeline, Deploy to Target Server
 on:
   workflow_dispatch:
     inputs:
-      colocate_121:
-        description: "Use docker-compose.121.yml (ai-todo → host.docker.internal:8082). Only after life/ai-todo listen on 121."
+      target:
+        description: "Deploy target Environment (tencent-101 auto on CI; aliyun-121 manual only)."
         required: true
-        type: boolean
-        default: false
+        type: choice
+        options:
+          - tencent-101
+          - aliyun-121
+        default: tencent-101
       skip_party_helper_precheck:
-        description: "Skip Party Helper upstream precheck (e.g. first bring-up on a new host)."
+        description: "Skip Party Helper upstream precheck (tencent-101 only)."
         required: true
         type: boolean
         default: false
@@ -19,7 +22,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: production-deploy
+  group: production-deploy-${{ github.event_name == 'workflow_dispatch' && inputs.target || 'tencent-101' }}
   cancel-in-progress: false
 
 permissions:
@@ -29,8 +32,8 @@ env:
   SERVER_DIR: ~/AgentProjects/xiaolin-gateway
   BASE_ENV_FILE: .env
   DEPLOY_ENV_FILE: .env.production
-  PRODUCTION_COMPOSE_FILE: docker-compose.yml:observability-compose.yml
-  PRODUCTION_COMPOSE_FILE_121: docker-compose.yml:docker-compose.121.yml:observability-compose.yml
+  PRODUCTION_COMPOSE_FILE_TENCENT_101: docker-compose.yml:docker-compose.tencent-101.yml:observability-compose.yml
+  PRODUCTION_COMPOSE_FILE_ALIYUN_121: docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml
 
 jobs:
   deploy-to-server:
@@ -38,13 +41,14 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'tencent-101' }}
     env:
-      COLOCATE_121: ${{ github.event_name == 'workflow_dispatch' && inputs.colocate_121 || false }}
+      DEPLOY_TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'tencent-101' }}
       SKIP_PARTY_HELPER_PRECHECK: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_party_helper_precheck || false }}
 
     steps:
       - name: Verify Party Helper H5 upstream and certificates
-        if: ${{ env.SKIP_PARTY_HELPER_PRECHECK != 'true' }}
+        if: ${{ env.DEPLOY_TARGET == 'tencent-101' && env.SKIP_PARTY_HELPER_PRECHECK != 'true' }}
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -72,7 +76,8 @@ jobs:
             cd ${{ env.SERVER_DIR }}
             git pull --ff-only
 
-      - name: Ensure xiaolin-life cert files exist (nginx -t)
+      - name: Ensure life + ai-todo cert files exist (aliyun-121)
+        if: ${{ env.DEPLOY_TARGET == 'aliyun-121' }}
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -82,12 +87,14 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            if [[ ! -f app/xiaolin-life/cert/xiaolin.fun_bundle.crt || ! -f app/xiaolin-life/cert/xiaolin.fun.key ]]; then
-              echo "xiaolin-life certs missing — generating short-lived placeholders for nginx -t"
-              echo "Replace with real certs before pointing DNS / cutting over xiaolin.fun"
+            if [[ ! -f app/xiaolin-life/cert/xiaolin.fun_bundle.crt || ! -f app/xiaolin-life/cert/xiaolin.fun.key \
+               || ! -f app/ai-todo/cert/xingxiaolin.cn.pem || ! -f app/ai-todo/cert/xingxiaolin.cn.key ]]; then
+              echo "life/ai-todo certs missing — generating short-lived placeholders for nginx -t"
+              echo "Replace with real certs before DNS cutover"
               bash scripts/prepare-certs.sh
             fi
             openssl x509 -in app/xiaolin-life/cert/xiaolin.fun_bundle.crt -noout -checkend 60
+            openssl x509 -in app/ai-todo/cert/xingxiaolin.cn.pem -noout -checkend 60
 
       - name: Verify runtime env keys
         uses: appleboy/ssh-action@v1.0.0
@@ -96,17 +103,17 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          envs: COLOCATE_121
+          envs: DEPLOY_TARGET
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
             touch "${{ env.DEPLOY_ENV_FILE }}"
 
-            if [[ "${COLOCATE_121}" == "true" ]]; then
-              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE_121 }}"
+            if [[ "${DEPLOY_TARGET}" == "aliyun-121" ]]; then
+              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE_ALIYUN_121 }}"
             else
-              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE }}"
+              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE_TENCENT_101 }}"
             fi
 
             ensure_env_key() {
@@ -144,7 +151,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE }}}"
+            export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE_TENCENT_101 }}}"
             # shellcheck disable=SC1091
             set -a
             source .env
