@@ -19,8 +19,11 @@ xiaolin-gateway/
 │   ├── xiaolin-docs/           # xiaolin-docs 项目
 │   │   ├── xiaolin-docs.conf   # Nginx vhost 配置
 │   │   └── cert/               # SSL 证书（git 忽略）
-│   ├── ai-todo/                # ai-todo API
-│   │   ├── ai-todo.conf        # xingxiaolin.cn → 111:30082 (K8s)
+│   ├── xiaolin-life/           # xiaolin.fun（aliyun-121）
+│   │   ├── xiaolin-life.conf
+│   │   └── cert/               # SSL 证书（git 忽略）
+│   ├── ai-todo/                # ai-todo API（aliyun-121 overlay → :8082）
+│   │   ├── ai-todo.conf        # 磁盘仍为 K8s IP；121 用 overlay
 │   │   └── cert/               # SSL 证书（git 忽略）
 │   ├── drinkzen/               # drinkzen（奶茶仙人）
 │   │   ├── drinkzen.conf       # drinkzen.cn/API → 111:31011 / admin → 111:31012
@@ -36,6 +39,8 @@ xiaolin-gateway/
 │   ├── prometheus.yml
 │   └── grafana/                # Grafana 数据源与看板 provisioning
 ├── docker-compose.yml          # 网关核心（nginx-gateway）
+├── docker-compose.tencent-101.yml  # 101 overlay：disable life/ai-todo
+├── docker-compose.aliyun-121.yml   # 121 overlay：ai-todo :8082；disable docs/drinkzen/party
 ├── docker-compose.local.yml    # 本地 overlay（ai-todo vhost 等）
 ├── observability-compose.yml   # 可选：Prometheus / Grafana / exporters
 ├── scripts/                    # 证书生成等辅助脚本
@@ -116,7 +121,7 @@ docker compose --env-file .env --env-file .env.production up -d
 docker compose ps
 ```
 
-生产环境通过 GitHub Actions 部署：**`main` 上 CI 通过后**自动 CD；也可手动 `workflow_dispatch`。配置真源见 [docs/routing-registry.md](docs/routing-registry.md)。
+生产部署经 GitHub Actions：**`main` CI 通过后自动部署 Environment `tencent-101`**；阿里云 121 仅手动 `workflow_dispatch` 并选择 `target=aliyun-121`。双机职责与 compose 见 [docs/routing-registry.md](docs/routing-registry.md)；设计见 [docs/superpowers/specs/2026-11-11-dual-host-cd-design.md](docs/superpowers/specs/2026-11-11-dual-host-cd-design.md)。
 
 ## 📈 可观测能力
 

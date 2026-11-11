@@ -2,7 +2,7 @@
 
 Date: 2026-11-11  
 Status: approved (conversation)  
-Related: `docs/routing-registry.md`, `.github/workflows/cd.yml`, `docker-compose.121.yml`
+Related: `docs/routing-registry.md`, `.github/workflows/cd.yml`, `docker-compose.tencent-101.yml`, `docker-compose.aliyun-121.yml`
 
 ## Goal
 
