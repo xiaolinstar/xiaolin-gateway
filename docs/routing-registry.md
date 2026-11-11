@@ -19,7 +19,8 @@ Internet → nginx-gateway (80/443)
 | ID | 类 | 对外域名 | Gateway conf | Upstream | 后端地址 | 负责仓库 | Healthz |
 |----|-----|----------|--------------|----------|----------|----------|---------|
 | docs | ③ 内容 | `www.xiaolinstar.cn` | `app/xiaolin-docs/xiaolin-docs.conf` | `xiaolin-service` | `124.222.98.227:8080` | [xiaolin-docs](https://github.com/xiaolinstar/xiaolin-docs) | ✅ `GET /healthz` |
-| ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf` | `ai-todo-api` | `111.229.38.208:30082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
+| life | ③ 内容 | `xiaolin.fun` / `www.xiaolin.fun` | `app/xiaolin-life/xiaolin-life.conf` | `xiaolin-life-web` | `host.docker.internal:8080`（121 同机；life 用 `compose.behind-gateway.yaml`） | [xiaolin-life](https://github.com/xiaolinstar/xiaolin-life) | ✅ `GET /healthz` → 204 |
+| ai-todo | ② 应用 | `www.xingxiaolin.cn` | `app/ai-todo/ai-todo.conf`（101）或 `ai-todo.121.overlay`（121） | `ai-todo-api` | 101 现网 `111.229.38.208:30082`；121 同机 `host.docker.internal:8082` | [ai-todo](https://github.com/xiaolinstar/ai-todo) | ✅ `GET /healthz`（`/v1/health` 仍用于深度检查） |
 | party-root | ② 应用 | `wodi.games` | `app/party-helper/party-helper.conf` | `party-helper-web` | `111.229.38.208:30020` | [party-helper](https://github.com/xiaolinstar/party-helper) | ✅ `GET /healthz`，200 JSON |
 | party-www | ① 跳转 | `www.wodi.games` | 同上 | 301 → `wodi.games`，保留路径和查询参数 | — | party-helper | 跟随跳转后 `GET /healthz` |
 | drinkzen | ② 应用 | `drinkzen.cn` | `app/drinkzen/drinkzen.conf` | `drinkzen-api`（过渡） | `111.229.38.208:31011` | [drinkzen](https://github.com/xiaolinstar/drinkzen) | ✅ `GET /healthz` |
@@ -46,9 +47,16 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | 项目 | 宿主机路径 | 文件名模式 |
 |------|------------|------------|
 | xiaolin-docs | `app/xiaolin-docs/cert/` | `xiaolinstar.cn_*` |
-| ai-todo | `app/ai-todo/cert/` | `xingxiaolin.cn.pem` |
+| xiaolin-life | `app/xiaolin-life/cert/` | `xiaolin.fun_bundle.crt`、`xiaolin.fun.key` |
+| ai-todo | `app/ai-todo/cert/` | `xingxiaolin.cn.pem` / `xingxiaolin.cn.key` |
 | drinkzen | `app/drinkzen/cert/` | `drinkzen.cn_*`、`api.drinkzen.cn_*`、`admin.drinkzen.cn_*` |
 | party-helper | `app/party-helper/cert/` | `wodi.games_*`、`api.wodi.games_*`、`admin.wodi.games_*` |
+
+### 121 同机（life + ai-todo）
+
+- Compose：`docker-compose.yml` + `docker-compose.121.yml`（ai-todo upstream 覆盖为本机 `:8082`）
+- life 必须先以 `compose.behind-gateway.yaml` 发布并占用 `127.0.0.1:8080`，再让 gateway 抢 `80/443`
+- 切流清单见 xiaolin-life 仓 `docs/GATEWAY-121-COLOCATE-CHECKLIST.md`
 
 ## 外部探活（uptime.yml）
 
@@ -57,6 +65,8 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 | ID | 探活 URL |
 |----|----------|
 | xiaolinstar | `https://www.xiaolinstar.cn/healthz` |
+| xiaolin-life | `https://xiaolin.fun/healthz` |
+| xiaolin-life-www | `https://www.xiaolin.fun/healthz` |
 | ai-todo | `https://www.xingxiaolin.cn/healthz` |
 | party-helper-root | `https://wodi.games/healthz`（H5，200 JSON） |
 | party-helper-www | `https://www.wodi.games/healthz`（301 到根域名） |

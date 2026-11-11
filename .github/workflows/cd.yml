@@ -2,6 +2,17 @@ name: CD Pipeline, Deploy to Target Server
 
 on:
   workflow_dispatch:
+    inputs:
+      colocate_121:
+        description: "Use docker-compose.121.yml (ai-todo → host.docker.internal:8082). Only after life/ai-todo listen on 121."
+        required: true
+        type: boolean
+        default: false
+      skip_party_helper_precheck:
+        description: "Skip Party Helper upstream precheck (e.g. first bring-up on a new host)."
+        required: true
+        type: boolean
+        default: false
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -19,6 +30,7 @@ env:
   BASE_ENV_FILE: .env
   DEPLOY_ENV_FILE: .env.production
   PRODUCTION_COMPOSE_FILE: docker-compose.yml:observability-compose.yml
+  PRODUCTION_COMPOSE_FILE_121: docker-compose.yml:docker-compose.121.yml:observability-compose.yml
 
 jobs:
   deploy-to-server:
@@ -26,9 +38,13 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
+    env:
+      COLOCATE_121: ${{ github.event_name == 'workflow_dispatch' && inputs.colocate_121 || false }}
+      SKIP_PARTY_HELPER_PRECHECK: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_party_helper_precheck || false }}
 
     steps:
       - name: Verify Party Helper H5 upstream and certificates
+        if: ${{ env.SKIP_PARTY_HELPER_PRECHECK != 'true' }}
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -56,7 +72,7 @@ jobs:
             cd ${{ env.SERVER_DIR }}
             git pull --ff-only
 
-      - name: Verify runtime env keys
+      - name: Ensure xiaolin-life cert files exist (nginx -t)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -66,21 +82,49 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
+            if [[ ! -f app/xiaolin-life/cert/xiaolin.fun_bundle.crt || ! -f app/xiaolin-life/cert/xiaolin.fun.key ]]; then
+              echo "xiaolin-life certs missing — generating short-lived placeholders for nginx -t"
+              echo "Replace with real certs before pointing DNS / cutting over xiaolin.fun"
+              bash scripts/prepare-certs.sh
+            fi
+            openssl x509 -in app/xiaolin-life/cert/xiaolin.fun_bundle.crt -noout -checkend 60
+
+      - name: Verify runtime env keys
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          envs: COLOCATE_121
+          script: |
+            set -euo pipefail
+            cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
             touch "${{ env.DEPLOY_ENV_FILE }}"
+
+            if [[ "${COLOCATE_121}" == "true" ]]; then
+              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE_121 }}"
+            else
+              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE }}"
+            fi
 
             ensure_env_key() {
               local file="$1"
               local key="$2"
               local value="$3"
 
-              if ! grep -qE "^${key}=" "$file"; then
+              if grep -qE "^${key}=" "$file"; then
+                sed -i.bak -E "s|^${key}=.*|${key}=${value}|" "$file"
+                rm -f "${file}.bak"
+              else
                 printf '\n%s=%s\n' "$key" "$value" >> "$file"
               fi
             }
 
-            ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "${{ env.PRODUCTION_COMPOSE_FILE }}"
-            ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "${{ env.PRODUCTION_COMPOSE_FILE }}"
+            ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
+            ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
+            echo "COMPOSE_FILE=$DESIRED_COMPOSE"
 
             DEV_STANDARDS="${DEV_STANDARDS:-$HOME/AgentProjects/dev-standards}"
             CHECK="$DEV_STANDARDS/scripts/env/check-env-keys.sh"
@@ -101,6 +145,12 @@ jobs:
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
             export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE }}}"
+            # shellcheck disable=SC1091
+            set -a
+            source .env
+            # shellcheck disable=SC1091
+            source .env.production
+            set +a
             docker compose --env-file .env --env-file .env.production pull
 
       - name: Apply desired compose state
@@ -113,7 +163,10 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE }}}"
+            set -a
+            source .env
+            source .env.production
+            set +a
             docker compose --env-file .env --env-file .env.production up -d --remove-orphans
 
       - name: Verify nginx config and reload

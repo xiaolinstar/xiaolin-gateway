@@ -16,6 +16,12 @@ jobs:
           - name: xiaolinstar
             host: www.xiaolinstar.cn
             url: https://www.xiaolinstar.cn/healthz
+          - name: xiaolin-life
+            host: xiaolin.fun
+            url: https://xiaolin.fun/healthz
+          - name: xiaolin-life-www
+            host: www.xiaolin.fun
+            url: https://www.xiaolin.fun/healthz
           - name: ai-todo
             host: www.xingxiaolin.cn
             url: https://www.xingxiaolin.cn/healthz
