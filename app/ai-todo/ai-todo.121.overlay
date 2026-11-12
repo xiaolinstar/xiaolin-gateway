@@ -1,13 +1,13 @@
 # 121 colocate overlay: same-host ai-todo compose on :8082.
-# Mounted over ai-todo.conf via docker-compose.121.yml (file bind wins).
+# Mounted over ai-todo.conf via docker-compose.aliyun-121.yml (file bind wins).
 
 upstream ai-todo-api {
     server host.docker.internal:8082;
 }
 
 server {
+    # IPv4 only — aliyun-121 has no public IPv6 (no AAAA).
     listen 443 ssl;
-    listen [::]:443 ssl;
     server_name xingxiaolin.cn www.xingxiaolin.cn;
 
     ssl_certificate /etc/nginx/cert/ai-todo/xingxiaolin.cn.pem;

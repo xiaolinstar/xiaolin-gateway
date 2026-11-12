@@ -54,8 +54,8 @@ Web Service 就绪后，仅将 `drinkzen.cn` 的 `proxy_pass` 改为 `http://dri
 
 ### 双机（tencent-101 / aliyun-121）
 
-- **tencent-101**：docs / drinkzen / party-helper。Compose：`docker-compose.yml` + `docker-compose.tencent-101.yml`（life/ai-todo conf → empty）。
-- **aliyun-121**：life + ai-todo。Compose：`docker-compose.yml` + `docker-compose.aliyun-121.yml`（ai-todo → `:8082`；docs/drinkzen/party → empty）。
+- **tencent-101**：docs / drinkzen / party-helper。Compose：`docker-compose.yml` + `docker-compose.tencent-101.yml`（life/ai-todo conf → empty）。可保留 IPv6 listen。
+- **aliyun-121**：life + ai-todo（**仅 IPv4**，无公网 IPv6 / 无 AAAA）。Compose：`docker-compose.yml` + `docker-compose.aliyun-121.yml`（`gateway.aliyun-121.conf`；ai-todo → `:8082`；docs/drinkzen/party → empty；`enable_ipv6: false`）。
 - life 必须先以 `compose.behind-gateway.yaml` 占 `127.0.0.1:8080`，再让 gateway 抢 `80/443`。
 - CD：`main` CI 通过后只部署 `tencent-101`；`aliyun-121` 仅 `workflow_dispatch` + `target=aliyun-121`。
 - 切流清单见 xiaolin-life 仓 `docs/GATEWAY-121-COLOCATE-CHECKLIST.md`。
