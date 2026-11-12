@@ -22,7 +22,8 @@ on:
     branches: [main]
 
 concurrency:
-  group: production-deploy-${{ github.event_name == 'workflow_dispatch' && inputs.target || 'tencent-101' }}
+  # workflow_run has no inputs.* — always pin auto CD to tencent-101
+  group: production-deploy-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target || 'tencent-101' }}
   cancel-in-progress: false
 
 permissions:
@@ -32,8 +33,9 @@ env:
   SERVER_DIR: ~/AgentProjects/xiaolin-gateway
   BASE_ENV_FILE: .env
   DEPLOY_ENV_FILE: .env.production
-  PRODUCTION_COMPOSE_FILE_TENCENT_101: docker-compose.yml:docker-compose.tencent-101.yml:observability-compose.yml
-  PRODUCTION_COMPOSE_FILE_ALIYUN_121: docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml
+  # Quote compose lists — unquoted YAML with multiple ":" is fragile in Actions.
+  PRODUCTION_COMPOSE_FILE_TENCENT_101: "docker-compose.yml:docker-compose.tencent-101.yml:observability-compose.yml"
+  PRODUCTION_COMPOSE_FILE_ALIYUN_121: "docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml"
 
 jobs:
   deploy-to-server:
@@ -41,10 +43,10 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'tencent-101' }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target || 'tencent-101' }}
     env:
-      DEPLOY_TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.target || 'tencent-101' }}
-      SKIP_PARTY_HELPER_PRECHECK: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_party_helper_precheck || false }}
+      DEPLOY_TARGET: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target || 'tencent-101' }}
+      SKIP_PARTY_HELPER_PRECHECK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_party_helper_precheck || false }}
 
     steps:
       - name: Verify Party Helper H5 upstream and certificates
@@ -103,30 +105,34 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          envs: DEPLOY_TARGET
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
             touch "${{ env.DEPLOY_ENV_FILE }}"
 
-            if [[ "${DEPLOY_TARGET}" == "aliyun-121" ]]; then
-              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE_ALIYUN_121 }}"
-            else
-              DESIRED_COMPOSE="${{ env.PRODUCTION_COMPOSE_FILE_TENCENT_101 }}"
-            fi
+            # Resolve COMPOSE_FILE on the Actions runner (no remote DEPLOY_TARGET / set -u footgun).
+            DESIRED_COMPOSE="${{ env.DEPLOY_TARGET == 'aliyun-121' && env.PRODUCTION_COMPOSE_FILE_ALIYUN_121 || env.PRODUCTION_COMPOSE_FILE_TENCENT_101 }}"
 
             ensure_env_key() {
               local file="$1"
               local key="$2"
               local value="$3"
-
-              if grep -qE "^${key}=" "$file"; then
-                sed -i.bak -E "s|^${key}=.*|${key}=${value}|" "$file"
-                rm -f "${file}.bak"
+              local tmp
+              tmp="$(mktemp)"
+              # awk -v avoids sed metacharacter breakage on COMPOSE_FILE (colons).
+              if [[ -f "$file" ]] && grep -qE "^${key}=" "$file"; then
+                awk -v k="$key" -v v="$value" 'BEGIN{p=k"="} index($0,p)==1{$0=p v} {print}' "$file" >"$tmp"
               else
-                printf '\n%s=%s\n' "$key" "$value" >> "$file"
+                if [[ -f "$file" ]]; then
+                  cat "$file" >"$tmp"
+                  printf '\n' >>"$tmp"
+                else
+                  : >"$tmp"
+                fi
+                printf '%s=%s\n' "$key" "$value" >>"$tmp"
               fi
+              mv "$tmp" "$file"
             }
 
             ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
