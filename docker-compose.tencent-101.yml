@@ -1,0 +1,9 @@
+# Overlay for Tencent Cloud VPS (Environment tencent-101).
+# Disables life / ai-todo vhosts so those cert dirs are not required.
+# COMPOSE_FILE=docker-compose.yml:docker-compose.tencent-101.yml:observability-compose.yml
+
+services:
+  nginx-gateway:
+    volumes:
+      - ./app/_disabled/empty.conf:/etc/nginx/app/xiaolin-life/xiaolin-life.conf:ro
+      - ./app/_disabled/empty.conf:/etc/nginx/app/ai-todo/ai-todo.conf:ro

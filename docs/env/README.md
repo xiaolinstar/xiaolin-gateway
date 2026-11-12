@@ -7,10 +7,10 @@
 | 层 | 路径 |
 |----|------|
 | L0 模板 | `.env.example`、`.env.production.example`、`.env.local.example` |
-| L2 CI/CD | 仓库 **Secrets** `SERVER_*`；清单见 `docs/env/github-environments.example.env` |
+| L2 CI/CD | GitHub **Environments** `tencent-101` / `aliyun-121` 内 Secrets `SERVER_*`（同名）；清单见 `docs/env/github-tencent-101.env`、`docs/env/github-aliyun-121.env`（索引：`github-environments.example.env`） |
 | L3 运行时（VPS / 本地） | `.env` → `.env.production`（生产）或 `.env.local`（本地） |
 | L3 集中备份（可选） | `~/.config/xiaolinstar/xiaolin-gateway/production.env` |
-| L2 本地清单（可选） | `~/.config/xiaolinstar/xiaolin-gateway/github-production.env` |
+| L2 本地清单（可选） | `~/.config/xiaolinstar/xiaolin-gateway/github-tencent-101.env`、`github-aliyun-121.env` |
 
 **不要**使用已废弃的 `env/production.env` 路径；CD 只加载根目录 `.env*`。
 
@@ -39,13 +39,16 @@ bash ~/AgentProjects/dev-standards/scripts/env/check-env-keys.sh --project . --s
 
 ## GitHub L2 同步（party-helper 模式）
 
-本仓 CD 使用**仓库级** Secrets（`SERVER_HOST` / `SERVER_USER` / `SERVER_PASSWORD`），不是 GitHub Environment。
+本仓 CD 使用 GitHub **Environments** `tencent-101` / `aliyun-121`，每个 Environment 内 Secret 名相同：`SERVER_HOST` / `SERVER_USER` / `SERVER_PASSWORD`。Environments 填好后，仓库级 Secrets 视为废弃。
 
 ```bash
 mkdir -p ~/.config/xiaolinstar/xiaolin-gateway
-cp docs/env/github-production.env ~/.config/xiaolinstar/xiaolin-gateway/github-production.env
-chmod 600 ~/.config/xiaolinstar/xiaolin-gateway/github-production.env
+cp docs/env/github-tencent-101.env ~/.config/xiaolinstar/xiaolin-gateway/github-tencent-101.env
+cp docs/env/github-aliyun-121.env ~/.config/xiaolinstar/xiaolin-gateway/github-aliyun-121.env
+chmod 600 ~/.config/xiaolinstar/xiaolin-gateway/github-tencent-101.env \
+          ~/.config/xiaolinstar/xiaolin-gateway/github-aliyun-121.env
 # 编辑真实值后：
+# If sync script supports --environment, pass tencent-101 / aliyun-121.
 node ~/AgentProjects/dev-standards/scripts/env/sync-github-env.mjs --project xiaolin-gateway --dry-run
 node ~/AgentProjects/dev-standards/scripts/env/sync-github-env.mjs --project xiaolin-gateway
 ```

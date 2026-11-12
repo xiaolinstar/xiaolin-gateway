@@ -1,0 +1,18 @@
+# Overlay for Aliyun ECS (Environment aliyun-121).
+# life stays on host.docker.internal:8080 (base conf); ai-todo → :8082;
+# docs / drinkzen / party-helper vhosts disabled (no certs on this host).
+# IPv4 only: gateway + life/ai-todo have no listen [::]; network ipv6 off.
+# COMPOSE_FILE=docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml
+
+services:
+  nginx-gateway:
+    volumes:
+      - ./app/gateway.aliyun-121.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./app/ai-todo/ai-todo.121.overlay:/etc/nginx/app/ai-todo/ai-todo.conf:ro
+      - ./app/_disabled/empty.conf:/etc/nginx/app/xiaolin-docs/xiaolin-docs.conf:ro
+      - ./app/_disabled/empty.conf:/etc/nginx/app/drinkzen/drinkzen.conf:ro
+      - ./app/_disabled/empty.conf:/etc/nginx/app/party-helper/party-helper.conf:ro
+
+networks:
+  gateway-network:
+    enable_ipv6: false
