@@ -87,13 +87,13 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            if [[ ! -f app/xiaolin-life/cert/xiaolin.fun_bundle.crt || ! -f app/xiaolin-life/cert/xiaolin.fun.key \
+            if [[ ! -f app/xiaolin-life/cert/xiaolin.fun.pem || ! -f app/xiaolin-life/cert/xiaolin.fun.key \
                || ! -f app/ai-todo/cert/xingxiaolin.cn.pem || ! -f app/ai-todo/cert/xingxiaolin.cn.key ]]; then
               echo "life/ai-todo certs missing — generating short-lived placeholders for nginx -t"
               echo "Replace with real certs before DNS cutover"
               bash scripts/prepare-certs.sh
             fi
-            openssl x509 -in app/xiaolin-life/cert/xiaolin.fun_bundle.crt -noout -checkend 60
+            openssl x509 -in app/xiaolin-life/cert/xiaolin.fun.pem -noout -checkend 60
             openssl x509 -in app/ai-todo/cert/xingxiaolin.cn.pem -noout -checkend 60
 
       - name: Verify runtime env keys
