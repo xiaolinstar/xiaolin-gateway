@@ -102,48 +102,66 @@ jobs:
             openssl x509 -in app/xiaolin-life/cert/xiaolin.fun.pem -noout -checkend 60
             openssl x509 -in app/ai-todo/cert/xingxiaolin.cn.pem -noout -checkend 60
 
+      - name: Resolve COMPOSE_FILE
+        id: compose
+        env:
+          DEPLOY_TARGET: ${{ env.DEPLOY_TARGET }}
+          ENABLE_OBSERVABILITY: ${{ env.ENABLE_OBSERVABILITY }}
+          BASE_101: ${{ env.PRODUCTION_COMPOSE_BASE_TENCENT_101 }}
+          BASE_121: ${{ env.PRODUCTION_COMPOSE_BASE_ALIYUN_121 }}
+          OBS_FILE: ${{ env.OBSERVABILITY_COMPOSE_FILE }}
+        run: |
+          set -euo pipefail
+          if [[ "$DEPLOY_TARGET" == "aliyun-121" ]]; then
+            COMPOSE_BASE="$BASE_121"
+            DEFAULT_OBS=false
+          else
+            COMPOSE_BASE="$BASE_101"
+            DEFAULT_OBS=true
+          fi
+          ENABLE_OBS_RAW="${ENABLE_OBSERVABILITY:-}"
+          if [[ -z "$ENABLE_OBS_RAW" ]]; then
+            ENABLE_OBS_RAW="$DEFAULT_OBS"
+          fi
+          ENABLE_OBS_NORM="$(printf '%s' "$ENABLE_OBS_RAW" | tr '[:upper:]' '[:lower:]')"
+          ENABLE_OBS=false
+          case "$ENABLE_OBS_NORM" in
+            1|true|yes|on) ENABLE_OBS=true ;;
+          esac
+          DESIRED_COMPOSE="$COMPOSE_BASE"
+          if [[ "$ENABLE_OBS" == "true" ]]; then
+            DESIRED_COMPOSE="${COMPOSE_BASE}:${OBS_FILE}"
+          fi
+          echo "ENABLE_OBSERVABILITY=$ENABLE_OBS"
+          echo "COMPOSE_FILE=$DESIRED_COMPOSE"
+          {
+            echo "desired_compose=$DESIRED_COMPOSE"
+            echo "enable_observability=$ENABLE_OBS"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Verify runtime env keys
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          DESIRED_COMPOSE: ${{ steps.compose.outputs.desired_compose }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          # Remote login shell may be zsh — avoid bash-only / zsh-comment pitfalls.
+          envs: DESIRED_COMPOSE
+          # Keep remote script minimal — host login shell may be zsh.
           script: |
-            set -euo pipefail
+            set -e
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
             touch "${{ env.DEPLOY_ENV_FILE }}"
-
-            # Resolve COMPOSE_FILE on the Actions runner (no remote DEPLOY_TARGET / set -u footgun).
-            COMPOSE_BASE="${{ env.DEPLOY_TARGET == 'aliyun-121' && env.PRODUCTION_COMPOSE_BASE_ALIYUN_121 || env.PRODUCTION_COMPOSE_BASE_TENCENT_101 }}"
-            OBS_FILE="${{ env.OBSERVABILITY_COMPOSE_FILE }}"
-            ENABLE_OBS_RAW="${{ env.ENABLE_OBSERVABILITY }}"
-            if [ -z "${ENABLE_OBS_RAW}" ]; then
-              if [ "${{ env.DEPLOY_TARGET }}" = "aliyun-121" ]; then
-                ENABLE_OBS_RAW=false
-              else
-                ENABLE_OBS_RAW=true
-              fi
-            fi
-            ENABLE_OBS_NORM="$(printf '%s' "$ENABLE_OBS_RAW" | tr '[:upper:]' '[:lower:]')"
-            ENABLE_OBS=false
-            case "$ENABLE_OBS_NORM" in
-              1|true|yes|on) ENABLE_OBS=true ;;
-            esac
-            DESIRED_COMPOSE="$COMPOSE_BASE"
-            if [ "$ENABLE_OBS" = "true" ]; then
-              DESIRED_COMPOSE="${COMPOSE_BASE}:${OBS_FILE}"
-            fi
-            echo "ENABLE_OBSERVABILITY=$ENABLE_OBS"
+            echo "COMPOSE_FILE=${DESIRED_COMPOSE}"
 
             ensure_env_key() {
               file="$1"
               key="$2"
               value="$3"
               tmp="$(mktemp)"
-              # awk -v avoids sed metacharacter breakage on COMPOSE_FILE (colons).
               if [ -f "$file" ] && grep -qE "^${key}=" "$file"; then
                 awk -v k="$key" -v v="$value" 'BEGIN{p=k"="} index($0,p)==1{$0=p v} {print}' "$file" >"$tmp"
               else
@@ -158,27 +176,20 @@ jobs:
               mv "$tmp" "$file"
             }
 
-            # New hosts may have an empty/partial .env.production overlay. Seed
-            # missing keys from the example (do not overwrite existing values),
-            # then force COMPOSE_FILE for this deploy target.
             EXAMPLE_PROD=".env.production.example"
             if [ -f "$EXAMPLE_PROD" ]; then
-              while IFS= read -r line || [ -n "$line" ]; do
-                line="$(printf '%s' "$line" | sed 's/^[[:space:]]*//')"
+              awk '!/^[[:space:]]*#/ && index($0,"="){ sub(/^[[:space:]]+/,""); print }' "$EXAMPLE_PROD" | while IFS= read -r line; do
                 [ -z "$line" ] && continue
-                printf '%s\n' "$line" | grep -q '^#' && continue
-                printf '%s\n' "$line" | grep -q '=' || continue
                 key="${line%%=*}"
                 val="${line#*=}"
                 if ! grep -qE "^${key}=" "${{ env.DEPLOY_ENV_FILE }}" 2>/dev/null; then
                   ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" "$key" "$val"
                 fi
-              done < "$EXAMPLE_PROD"
+              done
             fi
 
-            ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
-            ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
-            echo "COMPOSE_FILE=$DESIRED_COMPOSE"
+            ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "${DESIRED_COMPOSE}"
+            ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "${DESIRED_COMPOSE}"
 
             DEV_STANDARDS="${DEV_STANDARDS:-$HOME/AgentProjects/dev-standards}"
             CHECK="$DEV_STANDARDS/scripts/env/check-env-keys.sh"
