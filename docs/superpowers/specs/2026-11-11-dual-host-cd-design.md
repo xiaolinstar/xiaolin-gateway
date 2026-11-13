@@ -44,10 +44,10 @@ Base `docker-compose.yml` keeps `extra_hosts: host-gateway` and cert volume moun
 
 ### COMPOSE_FILE
 
-| Target | Value |
-|--------|--------|
-| tencent-101 | `docker-compose.yml:docker-compose.tencent-101.yml:observability-compose.yml` |
-| aliyun-121 | `docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml` |
+| Target | Default `COMPOSE_FILE` | `ENABLE_OBSERVABILITY` default |
+|--------|------------------------|--------------------------------|
+| tencent-101 | `…tencent-101.yml:observability-compose.yml` | `true` |
+| aliyun-121 | `…aliyun-121.yml`（无监控） | `false`（Variable 可改为 `true`） |
 
 CD continues to write `COMPOSE_FILE` into `.env` and `.env.production` via `ensure_env_key` (same pattern as today).
 
@@ -115,7 +115,7 @@ Business bring-up (life `compose.behind-gateway.yaml`, ai-todo `:8082`) and DNS 
 - Business-repo CD for life / ai-todo
 - Automatic DNS cutover
 - Auto-deploy to `aliyun-121` on every `main` merge
-- Splitting or dropping `observability-compose.yml` per host (both keep it for now)
+- ~~Splitting or dropping `observability-compose.yml` per host~~ → done: 121 default off + `ENABLE_OBSERVABILITY`
 
 ## Acceptance
 
