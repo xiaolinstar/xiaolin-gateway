@@ -109,8 +109,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
+          # Host login shell may be zsh; keep this step in bash (heredoc).
           script: |
-            set -euo pipefail
+            bash -euo pipefail <<'ENDSCRIPT'
             cd ${{ env.SERVER_DIR }}
             test -f "${{ env.BASE_ENV_FILE }}"
             touch "${{ env.DEPLOY_ENV_FILE }}"
@@ -164,7 +165,7 @@ jobs:
             if [[ -f "$EXAMPLE_PROD" ]]; then
               while IFS= read -r line || [[ -n "$line" ]]; do
                 line="${line#"${line%%[![:space:]]*}"}"
-                [[ -z "$line" || "$line" == \#* ]] && continue
+                [[ -z "$line" || "$line" == '#'* ]] && continue
                 [[ "$line" != *=* ]] && continue
                 key="${line%%=*}"
                 val="${line#*=}"
@@ -185,6 +186,7 @@ jobs:
             else
               echo "warn: dev-standards check script not found (skip key validation)"
             fi
+            ENDSCRIPT
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
