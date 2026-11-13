@@ -13,7 +13,7 @@ concurrency:
 jobs:
   scan-secrets:
     name: Secret scan (gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
@@ -25,7 +25,7 @@ jobs:
   nginx-config:
     name: Nginx config test
     needs: [scan-secrets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - name: Prepare environment and certificates
@@ -50,7 +50,7 @@ jobs:
   env-templates:
     name: Env template key check
     needs: [scan-secrets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/checkout@v6

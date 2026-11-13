@@ -39,7 +39,7 @@ env:
 
 jobs:
   deploy-to-server:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
@@ -134,6 +134,23 @@ jobs:
               fi
               mv "$tmp" "$file"
             }
+
+            # New hosts may have an empty/partial .env.production overlay. Seed
+            # missing keys from the example (do not overwrite existing values),
+            # then force COMPOSE_FILE for this deploy target.
+            EXAMPLE_PROD=".env.production.example"
+            if [[ -f "$EXAMPLE_PROD" ]]; then
+              while IFS= read -r line || [[ -n "$line" ]]; do
+                line="${line#"${line%%[![:space:]]*}"}"
+                [[ -z "$line" || "$line" == \#* ]] && continue
+                [[ "$line" != *=* ]] && continue
+                key="${line%%=*}"
+                val="${line#*=}"
+                if ! grep -qE "^${key}=" "${{ env.DEPLOY_ENV_FILE }}" 2>/dev/null; then
+                  ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" "$key" "$val"
+                fi
+              done < "$EXAMPLE_PROD"
+            fi
 
             ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
             ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "$DESIRED_COMPOSE"
