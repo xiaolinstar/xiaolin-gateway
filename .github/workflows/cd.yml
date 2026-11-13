@@ -149,55 +149,10 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           envs: DESIRED_COMPOSE
-          # Keep remote script minimal — host login shell may be zsh.
+          # Invoke repo bash script (avoids zsh parsing the multiline body).
           script: |
-            set -e
             cd ${{ env.SERVER_DIR }}
-            test -f "${{ env.BASE_ENV_FILE }}"
-            touch "${{ env.DEPLOY_ENV_FILE }}"
-            echo "COMPOSE_FILE=${DESIRED_COMPOSE}"
-
-            ensure_env_key() {
-              file="$1"
-              key="$2"
-              value="$3"
-              tmp="$(mktemp)"
-              if [ -f "$file" ] && grep -qE "^${key}=" "$file"; then
-                awk -v k="$key" -v v="$value" 'BEGIN{p=k"="} index($0,p)==1{$0=p v} {print}' "$file" >"$tmp"
-              else
-                if [ -f "$file" ]; then
-                  cat "$file" >"$tmp"
-                  printf '\n' >>"$tmp"
-                else
-                  : >"$tmp"
-                fi
-                printf '%s=%s\n' "$key" "$value" >>"$tmp"
-              fi
-              mv "$tmp" "$file"
-            }
-
-            EXAMPLE_PROD=".env.production.example"
-            if [ -f "$EXAMPLE_PROD" ]; then
-              awk '!/^[[:space:]]*#/ && index($0,"="){ sub(/^[[:space:]]+/,""); print }' "$EXAMPLE_PROD" | while IFS= read -r line; do
-                [ -z "$line" ] && continue
-                key="${line%%=*}"
-                val="${line#*=}"
-                if ! grep -qE "^${key}=" "${{ env.DEPLOY_ENV_FILE }}" 2>/dev/null; then
-                  ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" "$key" "$val"
-                fi
-              done
-            fi
-
-            ensure_env_key "${{ env.BASE_ENV_FILE }}" COMPOSE_FILE "${DESIRED_COMPOSE}"
-            ensure_env_key "${{ env.DEPLOY_ENV_FILE }}" COMPOSE_FILE "${DESIRED_COMPOSE}"
-
-            DEV_STANDARDS="${DEV_STANDARDS:-$HOME/AgentProjects/dev-standards}"
-            CHECK="$DEV_STANDARDS/scripts/env/check-env-keys.sh"
-            if [ -x "$CHECK" ]; then
-              bash "$CHECK" --project . --strict --runtime .env --runtime .env.production --warn-extra
-            else
-              echo "warn: dev-standards check script not found (skip key validation)"
-            fi
+            bash scripts/cd-seed-and-verify-env.sh "$DESIRED_COMPOSE"
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
