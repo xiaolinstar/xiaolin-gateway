@@ -7,10 +7,8 @@
 | 层 | 路径 |
 |----|------|
 | L0 模板 | `.env.example`、`.env.production.example`、`.env.local.example` |
-| L2 CI/CD | GitHub **Environments** `tencent-101` / `aliyun-121` 内 Secrets `SERVER_*`（同名）；清单见 `docs/env/github-tencent-101.env`、`docs/env/github-aliyun-121.env`（索引：`github-environments.example.env`） |
-| L3 运行时（VPS / 本地） | `.env` → `.env.production`（生产）或 `.env.local`（本地） |
-| L3 集中备份（可选） | `~/.config/xiaolinstar/xiaolin-gateway/production.env` |
-| L2 本地清单（可选） | `~/.config/xiaolinstar/xiaolin-gateway/github-tencent-101.env`、`github-aliyun-121.env` |
+| L2 CI/CD | GitHub Environments `tencent-101` / `aliyun-121`：Secrets `SERVER_*`；可选 Variable `ENABLE_OBSERVABILITY`（见 [github-environments.example.env](github-environments.example.env)） |
+| L3 运行时（VPS / 本地） | `.env` → `.env.production`（生产）或 `.env.local`（本地）；CD 会按目标写入 `COMPOSE_FILE` |
 
 **不要**使用已废弃的 `env/production.env` 路径；CD 只加载根目录 `.env*`。
 
@@ -37,9 +35,18 @@ bash ~/AgentProjects/dev-standards/scripts/env/check-env-keys.sh --project . --s
   --project . --local production --strict
 ```
 
-## GitHub L2 同步（party-helper 模式）
+## Observability（按 Environment）
 
-本仓 CD 使用 GitHub **Environments** `tencent-101` / `aliyun-121`，每个 Environment 内 Secret 名相同：`SERVER_HOST` / `SERVER_USER` / `SERVER_PASSWORD`。Environments 填好后，仓库级 Secrets 视为废弃。
+| Environment | 默认 `ENABLE_OBSERVABILITY` | 默认 `COMPOSE_FILE` |
+|-------------|------------------------------|---------------------|
+| `tencent-101` | `true` | `…tencent-101.yml:observability-compose.yml` |
+| `aliyun-121` | `false`（省资源） | `…aliyun-121.yml`（无监控栈） |
+
+在对应 Environment 设置 Variable `ENABLE_OBSERVABILITY=true` 可在 121 打开监控；`false` 可在 101 关闭。
+
+## GitHub L2 同步（人类终端）
+
+Secrets：`SERVER_HOST` / `SERVER_USER` / `SERVER_PASSWORD`（各 Environment 同名）。仓库级 `SERVER_*` 在 Environments 填齐后废弃。
 
 ```bash
 mkdir -p ~/.config/xiaolinstar/xiaolin-gateway

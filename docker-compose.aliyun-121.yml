@@ -2,7 +2,10 @@
 # life stays on host.docker.internal:8080 (base conf); ai-todo → :8082;
 # docs / drinkzen / party-helper vhosts disabled (no certs on this host).
 # IPv4 only: gateway + life/ai-todo have no listen [::]; network ipv6 off.
-# COMPOSE_FILE=docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml
+# Default COMPOSE_FILE (no observability — save host resources):
+#   docker-compose.yml:docker-compose.aliyun-121.yml
+# Optional: set GitHub Environment Variable ENABLE_OBSERVABILITY=true to append
+#   :observability-compose.yml
 
 services:
   nginx-gateway:

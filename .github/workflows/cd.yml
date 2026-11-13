@@ -34,8 +34,10 @@ env:
   BASE_ENV_FILE: .env
   DEPLOY_ENV_FILE: .env.production
   # Quote compose lists — unquoted YAML with multiple ":" is fragile in Actions.
-  PRODUCTION_COMPOSE_FILE_TENCENT_101: "docker-compose.yml:docker-compose.tencent-101.yml:observability-compose.yml"
-  PRODUCTION_COMPOSE_FILE_ALIYUN_121: "docker-compose.yml:docker-compose.aliyun-121.yml:observability-compose.yml"
+  # Observability is appended when ENABLE_OBSERVABILITY resolves true (see job env).
+  PRODUCTION_COMPOSE_BASE_TENCENT_101: "docker-compose.yml:docker-compose.tencent-101.yml"
+  PRODUCTION_COMPOSE_BASE_ALIYUN_121: "docker-compose.yml:docker-compose.aliyun-121.yml"
+  OBSERVABILITY_COMPOSE_FILE: "observability-compose.yml"
 
 jobs:
   deploy-to-server:
@@ -47,6 +49,8 @@ jobs:
     env:
       DEPLOY_TARGET: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target || 'tencent-101' }}
       SKIP_PARTY_HELPER_PRECHECK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.skip_party_helper_precheck || false }}
+      # Optional GitHub Environment Variable. Empty → default on for tencent-101, off for aliyun-121.
+      ENABLE_OBSERVABILITY: ${{ vars.ENABLE_OBSERVABILITY }}
 
     steps:
       - name: Verify Party Helper H5 upstream and certificates
@@ -112,7 +116,25 @@ jobs:
             touch "${{ env.DEPLOY_ENV_FILE }}"
 
             # Resolve COMPOSE_FILE on the Actions runner (no remote DEPLOY_TARGET / set -u footgun).
-            DESIRED_COMPOSE="${{ env.DEPLOY_TARGET == 'aliyun-121' && env.PRODUCTION_COMPOSE_FILE_ALIYUN_121 || env.PRODUCTION_COMPOSE_FILE_TENCENT_101 }}"
+            COMPOSE_BASE="${{ env.DEPLOY_TARGET == 'aliyun-121' && env.PRODUCTION_COMPOSE_BASE_ALIYUN_121 || env.PRODUCTION_COMPOSE_BASE_TENCENT_101 }}"
+            OBS_FILE="${{ env.OBSERVABILITY_COMPOSE_FILE }}"
+            ENABLE_OBS_RAW="${{ env.ENABLE_OBSERVABILITY }}"
+            if [[ -z "${ENABLE_OBS_RAW}" ]]; then
+              if [[ "${{ env.DEPLOY_TARGET }}" == "aliyun-121" ]]; then
+                ENABLE_OBS_RAW=false
+              else
+                ENABLE_OBS_RAW=true
+              fi
+            fi
+            case "$(printf '%s' "$ENABLE_OBS_RAW" | tr '[:upper:]' '[:lower:]')" in
+              1|true|yes|on) ENABLE_OBS=true ;;
+              *) ENABLE_OBS=false ;;
+            esac
+            DESIRED_COMPOSE="$COMPOSE_BASE"
+            if [[ "$ENABLE_OBS" == "true" ]]; then
+              DESIRED_COMPOSE="${COMPOSE_BASE}:${OBS_FILE}"
+            fi
+            echo "ENABLE_OBSERVABILITY=$ENABLE_OBS"
 
             ensure_env_key() {
               local file="$1"
@@ -174,7 +196,6 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.SERVER_DIR }}
-            export COMPOSE_FILE="${COMPOSE_FILE:-${{ env.PRODUCTION_COMPOSE_FILE_TENCENT_101 }}}"
             # shellcheck disable=SC1091
             set -a
             source .env
