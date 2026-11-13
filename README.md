@@ -121,7 +121,14 @@ docker compose --env-file .env --env-file .env.production up -d
 docker compose ps
 ```
 
-生产部署经 GitHub Actions：**`main` CI 通过后自动部署 Environment `tencent-101`**；阿里云 121 仅手动 `workflow_dispatch` 并选择 `target=aliyun-121`。双机职责与 compose 见 [docs/routing-registry.md](docs/routing-registry.md)；设计见 [docs/superpowers/specs/2026-11-11-dual-host-cd-design.md](docs/superpowers/specs/2026-11-11-dual-host-cd-design.md)。
+生产部署经 GitHub Actions：
+
+- **`tencent-101`**：`main` CI 成功后 `workflow_run` **自动**部署。
+- **`aliyun-121`**：仅 `workflow_dispatch` 且 `target=aliyun-121`（手动）。
+- **并发**：concurrency group 按目标机分开（`production-deploy-tencent-101` / `production-deploy-aliyun-121`），两机互不取消；同机排队、不抢跑（`cancel-in-progress: false`）。
+- **远端步骤**：SSH 只跑一行 `bash scripts/cd-remote.sh <cmd>`（避免主机 zsh 解析多行脚本）；`COMPOSE_FILE` / observability 在 Actions runner 上解析。
+
+双机职责与 compose 见 [docs/routing-registry.md](docs/routing-registry.md)；设计见 [docs/superpowers/specs/2026-11-11-dual-host-cd-design.md](docs/superpowers/specs/2026-11-11-dual-host-cd-design.md)。
 
 ## 📈 可观测能力
 

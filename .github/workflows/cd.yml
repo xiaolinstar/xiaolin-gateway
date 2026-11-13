@@ -22,7 +22,8 @@ on:
     branches: [main]
 
 concurrency:
-  # workflow_run has no inputs.* — always pin auto CD to tencent-101
+  # Separate queues per target so 101 auto-CD and 121 manual CD do not cancel each other.
+  # workflow_run has no inputs.* — always pin auto CD to tencent-101.
   group: production-deploy-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target || 'tencent-101' }}
   cancel-in-progress: false
 
@@ -53,6 +54,16 @@ jobs:
       ENABLE_OBSERVABILITY: ${{ vars.ENABLE_OBSERVABILITY }}
 
     steps:
+      # Pull first (plain git — script may not exist on host until after this step).
+      - name: Sync repository
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: cd ${{ env.SERVER_DIR }} && git pull --ff-only
+
       - name: Verify Party Helper H5 upstream and certificates
         if: ${{ env.DEPLOY_TARGET == 'tencent-101' && env.SKIP_PARTY_HELPER_PRECHECK != 'true' }}
         uses: appleboy/ssh-action@v1.0.0
@@ -61,26 +72,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          script: |
-            set -euo pipefail
-            cd ${{ env.SERVER_DIR }}
-            curl -fsS --max-time 15 http://111.229.38.208:30020/healthz | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value.get("ok") is True and value.get("service")=="party-helper-web"; print(value)'
-            curl -fsS --max-time 15 -H "Origin: https://wodi.games" "http://111.229.38.208:30020/online/socket.io/?EIO=4&transport=polling" | python3 -c 'import json,sys; value=sys.stdin.read(); assert value.startswith("0"); packet=json.loads(value[1:]); assert "websocket" in packet["upgrades"]; print("online transport handshake ready")'
-            openssl x509 -in app/party-helper/cert/wodi.games_bundle.crt -noout -checkhost wodi.games | grep -F "does match certificate"
-            openssl x509 -in app/party-helper/cert/wodi.games_bundle.crt -noout -checkhost www.wodi.games | grep -F "does match certificate"
-            openssl x509 -in app/party-helper/cert/wodi.games_bundle.crt -noout -checkend 604800
-
-      - name: Sync repository
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
-          script: |
-            set -euo pipefail
-            cd ${{ env.SERVER_DIR }}
-            git pull --ff-only
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh party-precheck
 
       - name: Ensure life + ai-todo cert files exist (aliyun-121)
         if: ${{ env.DEPLOY_TARGET == 'aliyun-121' }}
@@ -90,17 +82,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          script: |
-            set -euo pipefail
-            cd ${{ env.SERVER_DIR }}
-            if [[ ! -f app/xiaolin-life/cert/xiaolin.fun.pem || ! -f app/xiaolin-life/cert/xiaolin.fun.key \
-               || ! -f app/ai-todo/cert/xingxiaolin.cn.pem || ! -f app/ai-todo/cert/xingxiaolin.cn.key ]]; then
-              echo "life/ai-todo certs missing — generating short-lived placeholders for nginx -t"
-              echo "Replace with real certs before DNS cutover"
-              bash scripts/prepare-certs.sh
-            fi
-            openssl x509 -in app/xiaolin-life/cert/xiaolin.fun.pem -noout -checkend 60
-            openssl x509 -in app/ai-todo/cert/xingxiaolin.cn.pem -noout -checkend 60
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh ensure-certs-121
 
       - name: Resolve COMPOSE_FILE
         id: compose
@@ -149,10 +131,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           envs: DESIRED_COMPOSE
-          # Invoke repo bash script (avoids zsh parsing the multiline body).
-          script: |
-            cd ${{ env.SERVER_DIR }}
-            bash scripts/cd-seed-and-verify-env.sh "$DESIRED_COMPOSE"
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh seed-verify "$DESIRED_COMPOSE"
 
       - name: Pull service images
         uses: appleboy/ssh-action@v1.0.0
@@ -161,16 +140,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          script: |
-            set -euo pipefail
-            cd ${{ env.SERVER_DIR }}
-            # shellcheck disable=SC1091
-            set -a
-            source .env
-            # shellcheck disable=SC1091
-            source .env.production
-            set +a
-            docker compose --env-file .env --env-file .env.production pull
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh compose-pull
 
       - name: Apply desired compose state
         uses: appleboy/ssh-action@v1.0.0
@@ -179,14 +149,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          script: |
-            set -euo pipefail
-            cd ${{ env.SERVER_DIR }}
-            set -a
-            source .env
-            source .env.production
-            set +a
-            docker compose --env-file .env --env-file .env.production up -d --remove-orphans
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh compose-up
 
       - name: Verify nginx config and reload
         uses: appleboy/ssh-action@v1.0.0
@@ -195,9 +158,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          script: |
-            docker exec nginx-gateway nginx -t
-            docker exec nginx-gateway nginx -s reload
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh nginx-reload
 
       - name: Prune unused images
         uses: appleboy/ssh-action@v1.0.0
@@ -206,5 +167,4 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
-          script: |
-            docker image prune -f
+          script: cd ${{ env.SERVER_DIR }} && bash scripts/cd-remote.sh prune
